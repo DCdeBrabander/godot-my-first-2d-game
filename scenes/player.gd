@@ -8,6 +8,7 @@ signal hit
 
 var screen_size # Size of the game window.
 var can_shoot = true
+var last_shoot_direction = Vector2(1, 0)
 
 func start(pos):
 	position = pos
@@ -42,9 +43,16 @@ func is_shooting() -> bool:
 	return Input.is_action_pressed("fire") && can_shoot
 
 func shoot(direction: Vector2):
+	var bullet_direction = direction 
+	
+	if (bullet_direction.x == 0 and bullet_direction.y == 0):
+		bullet_direction = last_shoot_direction
+	else:
+		last_shoot_direction = bullet_direction
+		
 	var bullet_instance = bullet.instantiate()
 	get_tree().root.add_child(bullet_instance)
-	bullet_instance.start(position, direction) 
+	bullet_instance.start(position, bullet_direction) 
 	start_gun_cooldown()
 
 func set_animation(velocity):
