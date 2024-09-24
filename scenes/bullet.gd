@@ -1,6 +1,8 @@
 extends Area2D
 
+@export var damage: int = 1
 @export var speed: Vector2 = Vector2(5, 5)
+
 var direction: Vector2
 var velocity: Vector2
 
@@ -13,9 +15,11 @@ func _process(delta: float) -> void:
 	velocity = (direction * speed) + Vector2(delta, delta)
 	position += velocity
 
-func _on_area_entered(area: Area2D) -> void:
-	if area.is_in_group("mobs"):
-		queue_free()
-
 func _on_visible_on_screen_notifier_2d_screen_exited() -> void:
 	queue_free()
+
+func _on_body_entered(node_body: Node2D) -> void:
+	if(node_body.is_in_group("mobs")): 
+		var mob = node_body
+		mob.hit(damage)
+		queue_free()

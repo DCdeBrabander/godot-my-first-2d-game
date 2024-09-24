@@ -1,29 +1,20 @@
 extends Node
 
 @export var mob_scene: PackedScene
-var score: int
-var save_data: SaveData
-
-func _ready() -> void:
-	print("main ready")
-	save_data = SaveData.load_or_create()
 
 func game_over():
-	if score > save_data.high_score:
-		save_data.high_score = score
-		save_data.save()
-	
+	Global.keep_high_score()
 	$HUD.show_game_over()
-	$HUD.show_highscore(save_data.high_score)
 	$ScoreTimer.stop()
 	$MobTimer.stop()
 	$Music.stop()
 	$DeathSound.play()
 	
 func new_game():
-	score = 0
+	Global.set_current_score(0)
+	$HUD.show_highscore(Global.get_high_score())
 	$Music.play()
-	$HUD.update_score(score)
+	$HUD.update_score(0)
 	$HUD.show_message("Get Ready")
 	$Player.start($StartPosition.position)
 	$StartTimer.start()
@@ -55,8 +46,8 @@ func _on_mob_timer_timeout() -> void:
 	add_child(mob)
 
 func _on_score_timer_timeout():
-	score += 1
-	$HUD.update_score(score)
+	Global.current_score += 1
+	$HUD.update_score(Global.current_score)
 
 func _on_start_timer_timeout():
 	$MobTimer.start()

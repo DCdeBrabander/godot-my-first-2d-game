@@ -1,6 +1,12 @@
 extends RigidBody2D
 
-# Called when the node enters the scene tree for the first time.
+@export var health: int = 1
+
+enum CausesOfDeath {
+	OUT_OF_BOUNDS,
+	KILLED
+}
+
 func _ready() -> void:
 	var mob_types = $AnimatedSprite2D.sprite_frames.get_animation_names()
 	$AnimatedSprite2D.play(mob_types[randi() % mob_types.size()])
@@ -10,8 +16,17 @@ func _process(delta: float) -> void:
 	pass
 	
 func _on_visible_on_screen_notifier_2d_screen_exited():
-	queue_free()
+	die(CausesOfDeath.OUT_OF_BOUNDS)
 
-func die():
-	pass
-	#set_deferred()
+func hit(incoming_damage: int):
+	health -= incoming_damage
+	if (health <= 0):	
+		die(CausesOfDeath.KILLED)
+	
+func die(cause_of_death: CausesOfDeath):
+	match cause_of_death:
+		CausesOfDeath.KILLED:
+			Global.current_score += 2
+		CausesOfDeath.OUT_OF_BOUNDS:
+			print("mob died because it went out of viewport")
+	queue_free()	
