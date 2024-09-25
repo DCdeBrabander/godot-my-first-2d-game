@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://80d5kngkiyry"]
+[gd_scene load_steps=10 format=3 uid="uid://80d5kngkiyry"]
 
 [ext_resource type="Texture2D" uid="uid://dxy7oleo1ov1g" path="res://art/playerGrey_up1.png" id="1_7ta4b"]
 [ext_resource type="Script" path="res://scenes/player.gd" id="1_s674r"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bd5l11km1x6dv" path="res://art/playerGrey_up2.png" id="2_hh35j"]
 [ext_resource type="Texture2D" uid="uid://cdp2vo6prs0ci" path="res://art/playerGrey_walk1.png" id="3_odaa8"]
 [ext_resource type="Texture2D" uid="uid://5fqllwk1lvsl" path="res://art/playerGrey_walk2.png" id="4_53fry"]
+[ext_resource type="Texture2D" uid="uid://cgq0n3w5rd6yc" path="res://art/2d_lights_and_shadows_neutral_point_light.webp" id="7_x6etn"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_clfu1"]
 animations = [{
@@ -41,6 +42,12 @@ position = Vector2(0, 4)
 script = ExtResource("1_s674r")
 bullet = ExtResource("2_2jpb8")
 metadata/_edit_group_ = true
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+shadow_enabled = true
+shadow_color = Color(0, 0, 0, 1)
+texture = ExtResource("7_x6etn")
+texture_scale = 2.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.5, 0.5)

@@ -9,14 +9,13 @@ func _ready():
 	
 func new_game():
 	Global.set_current_score(0)
-	$HUD.show_highscore(Global.get_high_score()).show_message("Get ready")
+	$HUD.show_highscore(Global.get_high_score()).show_game_message("Get ready")
 	$Player.start(viewport_size.get_center())
 	$StartTimer.start()
-	get_tree().call_group("mobs", "queue_free")
 	
 func game_over():
-	Global.keep_high_score()
 	$HUD.show_game_over()
+	get_tree().call_group("mobs", "queue_free")
 	$ScoreTimer.stop()
 	$MobTimer.stop()
 	$Music.stop()
