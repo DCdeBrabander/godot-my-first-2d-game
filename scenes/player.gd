@@ -6,12 +6,12 @@ signal hit
 @export var bullet_cooldown = 0.25
 @export var bullet: PackedScene
 
-var screen_size # Size of the game window.
+var screen_size
 var can_shoot = true
-var last_shoot_direction = Vector2(1, 0)
+var bullet_direction = Vector2(1, 0)
 
-func start(pos):
-	position = pos
+func start(_position: Vector2):
+	position = _position
 	show()
 	$CollisionShape2D.disabled = false
 
@@ -23,10 +23,13 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	var velocity: Vector2 = Vector2.ZERO
-	var direction: Vector2 = calc_direction()
+	var current_player_direction: Vector2 = get_player_direction()
+		
+	if (current_player_direction.x != 0 or current_player_direction.y != 0):
+		bullet_direction = current_player_direction.normalized()
 	
-	if direction.length() > 0:
-		velocity = direction.normalized() * speed
+	if current_player_direction.length() > 0:
+		velocity = current_player_direction.normalized() * speed
 		$AnimatedSprite2D.play()
 	else:
 		$AnimatedSprite2D.stop()
@@ -34,38 +37,30 @@ func _process(delta: float) -> void:
 	position += velocity * delta
 	position = position.clamp(Vector2.ZERO, screen_size)
 	
-	set_animation(direction)
+	set_animation(current_player_direction)
 	
 	if (is_shooting()):
-		shoot(direction)
+		shoot(bullet_direction)
 
 func is_shooting() -> bool:
 	return Input.is_action_pressed("fire") && can_shoot
 
 func shoot(direction: Vector2):
-	var bullet_direction = direction 
-	
-	if (bullet_direction.x == 0 and bullet_direction.y == 0):
-		bullet_direction = last_shoot_direction
-	else:
-		last_shoot_direction = bullet_direction
-		
 	var bullet_instance = bullet.instantiate()
 	get_tree().root.add_child(bullet_instance)
-	bullet_instance.start(position, bullet_direction) 
+	bullet_instance.start(position, direction) 
 	start_gun_cooldown()
 
 func set_animation(velocity):
 	if velocity.x != 0:
 		$AnimatedSprite2D.animation = "walk"
 		$AnimatedSprite2D.flip_v = false
-		# See the note below about the following boolean assignment.
 		$AnimatedSprite2D.flip_h = velocity.x < 0
 	elif velocity.y != 0:
 		$AnimatedSprite2D.animation = "up"
 		$AnimatedSprite2D.flip_v = velocity.y > 0
 
-func calc_direction():
+func get_player_direction():
 	var velocity = Vector2.ZERO
 	if Input.is_action_pressed("move_right"):
 		velocity.x += 1
@@ -74,8 +69,7 @@ func calc_direction():
 	if Input.is_action_pressed("move_down"):
 		velocity.y += 1
 	if Input.is_action_pressed("move_up"):
-		velocity.y -= 1	
-		
+		velocity.y -= 1
 	return velocity
 
 func _on_body_entered(body: Node2D) -> void:

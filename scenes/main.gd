@@ -6,7 +6,14 @@ var viewport_size
 
 func _ready():
 	viewport_size = get_viewport().get_visible_rect()
-
+	
+func new_game():
+	Global.set_current_score(0)
+	$HUD.show_highscore(Global.get_high_score()).show_message("Get ready")
+	$Player.start(viewport_size.get_center())
+	$StartTimer.start()
+	get_tree().call_group("mobs", "queue_free")
+	
 func game_over():
 	Global.keep_high_score()
 	$HUD.show_game_over()
@@ -14,16 +21,6 @@ func game_over():
 	$MobTimer.stop()
 	$Music.stop()
 	$DeathSound.play()
-	
-func new_game():
-	Global.set_current_score(0)
-	$HUD.show_highscore(Global.get_high_score())
-	$Music.play()
-	$HUD.update_score(0)
-	$HUD.show_message("Get Ready")
-	$Player.start(viewport_size.get_center())
-	$StartTimer.start()
-	get_tree().call_group("mobs", "queue_free")
 
 func _on_mob_timer_timeout() -> void:
 	# Create a new instance of the Mob scene.

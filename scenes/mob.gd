@@ -26,8 +26,6 @@ func hit(incoming_damage: int):
 	
 func die(cause_of_death: CausesOfDeath):
 	match cause_of_death:
-		CausesOfDeath.KILLED:
-			Global.add_score(score_on_kill)
-		CausesOfDeath.OUT_OF_BOUNDS:
-			print("mob died because it went out of viewport")
-	queue_free()	
+		CausesOfDeath.KILLED: Global.add_score(score_on_kill)
+		CausesOfDeath.OUT_OF_BOUNDS: Global.subtract_score(1)
+	queue_free()

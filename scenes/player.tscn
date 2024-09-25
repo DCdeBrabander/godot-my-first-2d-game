@@ -51,7 +51,7 @@ animation = &"walk"
 shape = SubResource("CapsuleShape2D_w2cyq")
 
 [node name="GunCooldown" type="Timer" parent="."]
-wait_time = 0.5
+wait_time = 0.1
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="timeout" from="GunCooldown" to="." method="_on_gun_cooldown_timeout"]
