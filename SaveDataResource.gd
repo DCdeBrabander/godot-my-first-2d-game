@@ -13,7 +13,6 @@ func get_save_data():
 	return data
 
 func save() -> void:
-	print("SAVING", data)
 	ResourceSaver.save(self, SAVE_PATH)
 	
 static func load_or_create() -> SaveDataResource: 

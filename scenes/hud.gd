@@ -2,6 +2,9 @@ extends CanvasLayer
 
 signal start_game
 
+func _init():
+	Global.connect("update_score", update_score)
+
 func show_message(text):
 	$Message.text = text
 	$Message.show()

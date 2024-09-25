@@ -1,20 +1,20 @@
 extends Node
 
+signal update_score
+
 var high_score_key := "high_score"
 var high_score = 0
 var current_score = 0
 var save_resource: SaveDataResource
 
-func get_save_data_resource() -> SaveDataResource:
-	save_resource = SaveDataResource.load_or_create()
-	return save_resource
-
 func add_score(add: int):
 	current_score += add
+	update_score.emit(current_score)
 	
 func set_current_score(score: int): 
 	current_score = score
-
+	update_score.emit(current_score)
+	
 func keep_high_score():
 	if current_score <= high_score:
 		return
@@ -28,3 +28,7 @@ func get_high_score():
 	if (has_saved_high_score):
 		return data[high_score_key]
 	return high_score
+
+func get_save_data_resource() -> SaveDataResource:
+	save_resource = SaveDataResource.load_or_create()
+	return save_resource

@@ -1,6 +1,7 @@
 extends RigidBody2D
 
 @export var health: int = 1
+@export var score_on_kill: int = 2
 
 enum CausesOfDeath {
 	OUT_OF_BOUNDS,
@@ -26,7 +27,7 @@ func hit(incoming_damage: int):
 func die(cause_of_death: CausesOfDeath):
 	match cause_of_death:
 		CausesOfDeath.KILLED:
-			Global.current_score += 2
+			Global.add_score(score_on_kill)
 		CausesOfDeath.OUT_OF_BOUNDS:
 			print("mob died because it went out of viewport")
 	queue_free()	

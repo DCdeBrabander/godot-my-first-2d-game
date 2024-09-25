@@ -2,6 +2,11 @@ extends Node
 
 @export var mob_scene: PackedScene
 
+var viewport_size
+
+func _ready():
+	viewport_size = get_viewport().get_visible_rect()
+
 func game_over():
 	Global.keep_high_score()
 	$HUD.show_game_over()
@@ -16,7 +21,7 @@ func new_game():
 	$Music.play()
 	$HUD.update_score(0)
 	$HUD.show_message("Get Ready")
-	$Player.start($StartPosition.position)
+	$Player.start(viewport_size.get_center())
 	$StartTimer.start()
 	get_tree().call_group("mobs", "queue_free")
 
@@ -46,8 +51,7 @@ func _on_mob_timer_timeout() -> void:
 	add_child(mob)
 
 func _on_score_timer_timeout():
-	Global.current_score += 1
-	$HUD.update_score(Global.current_score)
+	Global.add_score(1)
 
 func _on_start_timer_timeout():
 	$MobTimer.start()
