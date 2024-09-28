@@ -23,39 +23,35 @@ func _ready() -> void:
 	hide()
 
 func _process(delta: float) -> void:
-	var velocity: Vector2 = Vector2.ZERO
-	var current_player_direction: Vector2 = get_player_direction()
+	var view_direction: Vector2 = get_mouse_direction()
 	
-	if (current_player_direction.x != 0 or current_player_direction.y != 0):
-		bullet_direction = current_player_direction.normalized()
-		last_player_direction = current_player_direction
-	
+	move_player(delta)
+	rotate_field_of_view(view_direction)
+	set_animation(view_direction)
+		
+	if (is_shooting()): shoot(view_direction)
+
+func move_player(delta):
+	var current_player_direction: Vector2 = get_move_direction()
+	var player_velocity: Vector2 = Vector2.ZERO
+
 	if current_player_direction.length() > 0:
-		velocity = current_player_direction.normalized() * speed
+		player_velocity = current_player_direction.normalized() * speed
 		$AnimatedSprite2D.play()
 	else:
 		$AnimatedSprite2D.stop()
 
-
-	position += velocity * delta
+	position += player_velocity * delta
 	position = position.clamp(Vector2.ZERO, screen_size)
-	
-	
-	print($FieldOfView.get_texture().get_size())
-	
+
+func rotate_field_of_view(direction):
 	var scale = Vector2(1, 1)
-	#var size = ($FieldOfView.get_texture().get_size() * scale) as Vector2
 	var offset = Vector2(350, 0)
 	
 	$FieldOfView.scale = scale
 	$FieldOfView.offset = offset
 	$FieldOfView.position = position.normalized()
-	$FieldOfView.rotation = last_player_direction.angle()
-	
-	set_animation(current_player_direction)
-		
-	if (is_shooting()):
-		shoot(bullet_direction)
+	$FieldOfView.rotation = direction.angle()
 
 func is_shooting() -> bool:
 	return Input.is_action_pressed("fire") && can_shoot
@@ -75,7 +71,7 @@ func set_animation(velocity):
 		$AnimatedSprite2D.animation = "up"
 		$AnimatedSprite2D.flip_v = velocity.y > 0
 
-func get_player_direction():
+func get_move_direction():
 	var velocity = Vector2.ZERO
 	if Input.is_action_pressed("move_right"):
 		velocity.x += 1
@@ -86,13 +82,16 @@ func get_player_direction():
 	if Input.is_action_pressed("move_up"):
 		velocity.y -= 1
 	return velocity
+	
+func get_mouse_direction() -> Vector2:
+	return get_global_mouse_position() - position
 
 func _on_body_entered(body: Node2D) -> void:
-	pass
-	#hide()
-	#hit.emit()
-	#$CollisionShape2D.set_deferred("disabled", true)
-	#get_tree().call_group("bullets", "queue_free")
+	#pass
+	hide()
+	hit.emit()
+	$CollisionShape2D.set_deferred("disabled", true)
+	get_tree().call_group("bullets", "queue_free")
 
 func start_gun_cooldown():
 	can_shoot = false

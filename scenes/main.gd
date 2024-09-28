@@ -12,7 +12,8 @@ func new_game():
 	$HUD.show_highscore(Global.get_high_score()).show_game_message("Get ready")
 	$Player.start(viewport_size.get_center())
 	$StartTimer.start()
-	
+	$Music.play()
+
 func game_over():
 	$HUD.show_game_over()
 	get_tree().call_group("mobs", "queue_free")
@@ -42,7 +43,6 @@ func _on_mob_timer_timeout() -> void:
 	var velocity = Vector2(randf_range(150.0, 250.0), 0.0)
 	mob.linear_velocity = velocity.rotated(direction)
  
-	
 	mob.initialize(get_node("HUD"))
 	add_child(mob)
 

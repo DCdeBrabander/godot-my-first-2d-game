@@ -1,7 +1,7 @@
 extends Area2D
 
 @export var damage: int = 1
-@export var speed: Vector2 = Vector2(5, 5)
+@export var speed: Vector2 = Vector2(15, 15)
 
 var direction: Vector2
 var velocity: Vector2
@@ -12,8 +12,7 @@ func start(_position: Vector2, _direction: Vector2):
 	rotation = direction.angle()
 
 func _process(delta: float) -> void:
-	velocity = (direction * speed) + Vector2(delta, delta)
-	position += velocity
+	position += (direction.normalized() * speed) + Vector2(delta, delta)
 
 func _on_visible_on_screen_notifier_2d_screen_exited() -> void:
 	queue_free()

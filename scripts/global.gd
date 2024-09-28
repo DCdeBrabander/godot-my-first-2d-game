@@ -39,6 +39,7 @@ func get_high_score():
 
 func get_save_data_resource() -> SaveDataResource:
 	save_resource = SaveDataResource.load_or_create()
+	print(save_resource)
 	return save_resource
 
 func run_one_shot_timer(time: float = 1.0):
