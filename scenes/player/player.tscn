@@ -1,8 +1,8 @@
 [gd_scene load_steps=11 format=3 uid="uid://80d5kngkiyry"]
 
 [ext_resource type="Texture2D" uid="uid://dxy7oleo1ov1g" path="res://art/playerGrey_up1.png" id="1_7ta4b"]
-[ext_resource type="Script" path="res://scenes/player.gd" id="1_s674r"]
-[ext_resource type="PackedScene" uid="uid://bk6gj1ay4t15s" path="res://scenes/bullet.tscn" id="2_2jpb8"]
+[ext_resource type="Script" path="res://scenes/player/player.gd" id="1_s674r"]
+[ext_resource type="PackedScene" uid="uid://bk6gj1ay4t15s" path="res://scenes/weapons/bullet.tscn" id="2_2jpb8"]
 [ext_resource type="Texture2D" uid="uid://bd5l11km1x6dv" path="res://art/playerGrey_up2.png" id="2_hh35j"]
 [ext_resource type="Texture2D" uid="uid://cdp2vo6prs0ci" path="res://art/playerGrey_walk1.png" id="3_odaa8"]
 [ext_resource type="Texture2D" uid="uid://c6gulqoewemwt" path="res://art/view_mask_90.png" id="3_p53jl"]

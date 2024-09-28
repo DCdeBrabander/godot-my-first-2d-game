@@ -1,10 +1,10 @@
 [gd_scene load_steps=10 format=4 uid="uid://ccnpoibiv4urt"]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_l41a4"]
-[ext_resource type="PackedScene" uid="uid://dg1jw6l30ohdk" path="res://scenes/mob.tscn" id="2_urytg"]
+[ext_resource type="PackedScene" uid="uid://dg1jw6l30ohdk" path="res://scenes/enemies/mob.tscn" id="2_urytg"]
 [ext_resource type="Texture2D" uid="uid://bticjayhrtdxv" path="res://art/bg_tile.png" id="3_72bv5"]
-[ext_resource type="PackedScene" uid="uid://80d5kngkiyry" path="res://scenes/player.tscn" id="3_tdnuh"]
-[ext_resource type="PackedScene" uid="uid://baxknly378vrn" path="res://scenes/hud.tscn" id="4_4kipy"]
+[ext_resource type="PackedScene" uid="uid://80d5kngkiyry" path="res://scenes/player/player.tscn" id="3_tdnuh"]
+[ext_resource type="PackedScene" uid="uid://baxknly378vrn" path="res://scenes/hud/hud.tscn" id="4_4kipy"]
 [ext_resource type="AudioStream" uid="uid://pmabfccanhxl" path="res://art/gameover.wav" id="5_kx7h1"]
 
 [sub_resource type="Curve2D" id="Curve2D_nsr8n"]
