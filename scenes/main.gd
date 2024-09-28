@@ -22,7 +22,6 @@ func game_over():
 	$DeathSound.play()
 
 func _on_mob_timer_timeout() -> void:
-	# Create a new instance of the Mob scene.
 	var mob = mob_scene.instantiate()
 
 	# Choose a random location on Path2D.
@@ -42,8 +41,9 @@ func _on_mob_timer_timeout() -> void:
 	# Choose the velocity for the mob.
 	var velocity = Vector2(randf_range(150.0, 250.0), 0.0)
 	mob.linear_velocity = velocity.rotated(direction)
-
-	# Spawn the mob by adding it to the Main scene.
+ 
+	
+	mob.initialize(get_node("HUD"))
 	add_child(mob)
 
 func _on_score_timer_timeout():

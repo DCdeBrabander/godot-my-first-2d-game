@@ -40,3 +40,9 @@ func get_high_score():
 func get_save_data_resource() -> SaveDataResource:
 	save_resource = SaveDataResource.load_or_create()
 	return save_resource
+
+func run_one_shot_timer(time: float = 1.0):
+	await get_tree().create_timer(time).timeout
+
+func get_viewport_size() -> Vector2: 
+	return get_viewport().get_visible_rect().size

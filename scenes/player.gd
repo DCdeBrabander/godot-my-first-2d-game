@@ -6,9 +6,12 @@ signal hit
 @export var bullet_cooldown = 0.25
 @export var bullet: PackedScene
 
+@onready var fov_light := $FieldOfViewLight  # Replace with the actual path to your Polygon2D node.
+
 var screen_size
 var can_shoot = true
 var bullet_direction = Vector2(1, 0)
+var last_player_direction = Vector2.ZERO
 
 func start(_position: Vector2):
 	position = _position
@@ -22,9 +25,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	var velocity: Vector2 = Vector2.ZERO
 	var current_player_direction: Vector2 = get_player_direction()
-		
+	
 	if (current_player_direction.x != 0 or current_player_direction.y != 0):
 		bullet_direction = current_player_direction.normalized()
+		last_player_direction = current_player_direction
 	
 	if current_player_direction.length() > 0:
 		velocity = current_player_direction.normalized() * speed
@@ -32,11 +36,24 @@ func _process(delta: float) -> void:
 	else:
 		$AnimatedSprite2D.stop()
 
+
 	position += velocity * delta
 	position = position.clamp(Vector2.ZERO, screen_size)
 	
-	set_animation(current_player_direction)
 	
+	print($FieldOfView.get_texture().get_size())
+	
+	var scale = Vector2(1, 1)
+	#var size = ($FieldOfView.get_texture().get_size() * scale) as Vector2
+	var offset = Vector2(350, 0)
+	
+	$FieldOfView.scale = scale
+	$FieldOfView.offset = offset
+	$FieldOfView.position = position.normalized()
+	$FieldOfView.rotation = last_player_direction.angle()
+	
+	set_animation(current_player_direction)
+		
 	if (is_shooting()):
 		shoot(bullet_direction)
 
@@ -71,10 +88,11 @@ func get_player_direction():
 	return velocity
 
 func _on_body_entered(body: Node2D) -> void:
-	hide()
-	hit.emit()
-	$CollisionShape2D.set_deferred("disabled", true)
-	get_tree().call_group("bullets", "queue_free")
+	pass
+	#hide()
+	#hit.emit()
+	#$CollisionShape2D.set_deferred("disabled", true)
+	#get_tree().call_group("bullets", "queue_free")
 
 func start_gun_cooldown():
 	can_shoot = false

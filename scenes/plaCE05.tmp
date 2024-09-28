@@ -5,8 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://bk6gj1ay4t15s" path="res://scenes/bullet.tscn" id="2_2jpb8"]
 [ext_resource type="Texture2D" uid="uid://bd5l11km1x6dv" path="res://art/playerGrey_up2.png" id="2_hh35j"]
 [ext_resource type="Texture2D" uid="uid://cdp2vo6prs0ci" path="res://art/playerGrey_walk1.png" id="3_odaa8"]
-[ext_resource type="Texture2D" uid="uid://c6gulqoewemwt" path="res://art/view_mask_90.png" id="3_p53jl"]
 [ext_resource type="Texture2D" uid="uid://5fqllwk1lvsl" path="res://art/playerGrey_walk2.png" id="4_53fry"]
+[ext_resource type="Script" path="res://scenes/lighting/cone.gd" id="7_p1wid"]
 [ext_resource type="Texture2D" uid="uid://cgq0n3w5rd6yc" path="res://art/2d_lights_and_shadows_neutral_point_light.webp" id="7_x6etn"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_clfu1"]
@@ -39,28 +39,20 @@ radius = 27.0
 height = 68.0
 
 [node name="Player" type="Area2D"]
-position = Vector2(-889, -72)
+position = Vector2(0, 4)
 script = ExtResource("1_s674r")
 bullet = ExtResource("2_2jpb8")
 metadata/_edit_group_ = true
 
-[node name="FieldOfView" type="PointLight2D" parent="."]
-shadow_enabled = true
-shadow_filter = 1
-shadow_filter_smooth = 0.9
-texture = ExtResource("3_p53jl")
-texture_scale = 0.29
-
 [node name="PointLight2D" type="PointLight2D" parent="."]
-show_behind_parent = true
-z_index = 865
-color = Color(1, 1, 1, 0.372549)
-energy = 0.63
+color = Color(0.947211, 1, 0.93674, 1)
+energy = 1.03
 shadow_enabled = true
 shadow_color = Color(0, 0, 0, 0.615686)
+shadow_filter = 1
 shadow_filter_smooth = 2.3
 texture = ExtResource("7_x6etn")
-texture_scale = 1.39
+texture_scale = 10.82
 height = 100.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -73,6 +65,11 @@ shape = SubResource("CapsuleShape2D_w2cyq")
 
 [node name="GunCooldown" type="Timer" parent="."]
 wait_time = 0.1
+
+[node name="FieldOfViewLight" type="Polygon2D" parent="."]
+top_level = true
+z_index = 10
+script = ExtResource("7_p1wid")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="timeout" from="GunCooldown" to="." method="_on_gun_cooldown_timeout"]

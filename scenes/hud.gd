@@ -5,8 +5,18 @@ signal start_game
 func _init():
 	Global.connect("update_score", show_score)
 
-func run_one_shot_timer():
-	await get_tree().create_timer(1.0).timeout
+func show_one_shot_text(_text, _position, _duration):
+	var label =	Label.new()
+	
+	label.text = _text
+	label.position = _position
+	label.set("theme_override_font_sizes/font_size", 80)
+	add_child(label)
+	
+	label.show()
+	await Global.run_one_shot_timer(_duration)
+	label.hide()
+	label.queue_free()
 	
 func show_score(score):
 	$ScoreLabel.text = str(score)

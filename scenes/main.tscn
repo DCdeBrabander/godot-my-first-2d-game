@@ -26,9 +26,18 @@ loop = true
 script = ExtResource("1_l41a4")
 mob_scene = ExtResource("2_urytg")
 
+[node name="DirectionalLight2D" type="DirectionalLight2D" parent="."]
+visible = false
+light_mask = 0
+visibility_layer = 0
+energy = 0.1
+blend_mode = 2
+height = 1.0
+max_distance = 1000.0
+
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 position = Vector2(0, -1)
-color = Color(0, 0, 0, 1)
+color = Color(0.0605303, 0.0605303, 0.0605303, 1)
 
 [node name="TextureRect" type="TextureRect" parent="."]
 anchors_preset = 15
@@ -40,6 +49,9 @@ texture = ExtResource("3_72bv5")
 stretch_mode = 1
 
 [node name="Player" parent="." instance=ExtResource("3_tdnuh")]
+position = Vector2(520, 350)
+
+[node name="HUD" parent="." instance=ExtResource("4_4kipy")]
 
 [node name="MobTimer" type="Timer" parent="."]
 wait_time = 0.5
@@ -58,8 +70,6 @@ curve = SubResource("Curve2D_nsr8n")
 
 [node name="MobSpawnLocation" type="PathFollow2D" parent="MobPath"]
 
-[node name="HUD" parent="." instance=ExtResource("4_4kipy")]
-
 [node name="Music" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamOggVorbis_2fyjg")
 volume_db = -3.355
@@ -69,7 +79,7 @@ stream = ExtResource("5_kx7h1")
 volume_db = 4.742
 
 [connection signal="hit" from="Player" to="." method="game_over"]
+[connection signal="start_game" from="HUD" to="." method="new_game"]
 [connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
 [connection signal="timeout" from="ScoreTimer" to="." method="_on_score_timer_timeout"]
 [connection signal="timeout" from="StartTimer" to="." method="_on_start_timer_timeout"]
-[connection signal="start_game" from="HUD" to="." method="new_game"]
