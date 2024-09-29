@@ -55,6 +55,7 @@ cull_mode = 2
 polygon = PackedVector2Array(4, -36, 26, -35, 38, -27, 47, -13, 49, -1, 48, 9, 42, 21, 33, 30, 20, 36, -1, 37, -23, 36, -32, 31, -29, 15, -46, 14, -49, 9, -47, 2, -48, -5, -48, -14, -27, -16, -27, -30, -23, -36)
 
 [node name="Mob" type="RigidBody2D" groups=["mobs"]]
+z_index = 2
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_huyja")
 gravity_scale = 0.0
@@ -62,20 +63,6 @@ contact_monitor = true
 max_contacts_reported = 2
 script = ExtResource("1_65g5i")
 metadata/_edit_group_ = true
-
-[node name="MobMessage" type="Label" parent="."]
-top_level = true
-light_mask = 0
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -27.0
-offset_top = -24.0
-offset_right = 32.0
-offset_bottom = 21.0
-grow_horizontal = 2
-theme_override_font_sizes/font_size = 32
-horizontal_alignment = 1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.75, 0.75)

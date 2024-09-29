@@ -8,10 +8,15 @@ enum CausesOfDeath {
 	KILLED
 }
 
-var hudCanvasLayer: CanvasLayer
+enum Behaviour {
+	FOLLOW
+}
 
-func initialize(hud: CanvasLayer):
-	hudCanvasLayer = hud
+var current_behaviour: Behaviour = Behaviour.FOLLOW
+
+func initialize(start_position: Vector2):
+	position = start_position
+	linear_velocity = Vector2(randf_range(0, 3), randf_range(0, 3))
 	
 func show_mob_message(text: String):
 	var view_port_size = Global.get_viewport_size()
@@ -37,18 +42,24 @@ func show_mob_message(text: String):
 func _ready() -> void:
 	var mob_types = $AnimatedSprite2D.sprite_frames.get_animation_names()
 	$AnimatedSprite2D.play(mob_types[randi() % mob_types.size()])
-
+	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	pass
-	
+	match (current_behaviour):
+		Behaviour.FOLLOW: move_to(Global.player_position, delta)
+
+func move_to(new_position: Vector2, delta: float):
+	var distance = new_position - position
+	var velocity = distance.normalized() * linear_velocity
+	position += velocity + Vector2(delta, delta)
+
 func _on_visible_on_screen_notifier_2d_screen_exited():
-	die(CausesOfDeath.OUT_OF_BOUNDS)
+	pass
+	#die(CausesOfDeath.OUT_OF_BOUNDS)
 
 func hit(incoming_damage: int):
 	health -= incoming_damage
-	if (health <= 0):	
-		die(CausesOfDeath.KILLED)
+	if (health <= 0): die(CausesOfDeath.KILLED)
 	
 func die(cause_of_death: CausesOfDeath):
 	match cause_of_death:

@@ -2,29 +2,47 @@ extends Area2D
 
 signal hit
 
+enum PLAYER_STATES {
+	ALIVE,
+	DEAD
+}
+
 @export var speed = 400
 @export var bullet_cooldown = 0.25
 @export var bullet: PackedScene
 
-@onready var fov_light := $FieldOfViewLight  # Replace with the actual path to your Polygon2D node.
+@onready var fov_light := $FieldOfViewLight
 
 var screen_size
 var can_shoot = true
 var bullet_direction = Vector2(1, 0)
 var last_player_direction = Vector2.ZERO
+var current_player_state = PLAYER_STATES.DEAD
 
 func start(_position: Vector2):
 	position = _position
-	show()
+	alive()
+
+func die():
+	current_player_state = PLAYER_STATES.DEAD
+	$CollisionShape2D.set_deferred("disabled", true)
+	get_tree().call_group("bullets", "queue_free")
+	hide()
+
+func alive():
+	current_player_state = PLAYER_STATES.ALIVE
 	$CollisionShape2D.disabled = false
+	show()
 
 func _ready() -> void:
 	screen_size = get_viewport_rect().size
 	hide()
 
 func _process(delta: float) -> void:
-	var view_direction: Vector2 = get_mouse_direction()
+	if (current_player_state == PLAYER_STATES.DEAD): return
 	
+	var view_direction: Vector2 = get_mouse_direction()
+
 	move_player(delta)
 	rotate_field_of_view(view_direction)
 	set_animation(view_direction)
@@ -42,16 +60,16 @@ func move_player(delta):
 		$AnimatedSprite2D.stop()
 
 	position += player_velocity * delta
-	position = position.clamp(Vector2.ZERO, screen_size)
+	Global.set_current_player_position(position)
 
-func rotate_field_of_view(direction):
+func rotate_field_of_view(direction: Vector2, smoothing_scale: float = 0.1):
 	var scale = Vector2(1, 1)
 	var offset = Vector2(350, 0)
 	
 	$FieldOfView.scale = scale
 	$FieldOfView.offset = offset
 	$FieldOfView.position = position.normalized()
-	$FieldOfView.rotation = direction.angle()
+	$FieldOfView.rotation = lerp_angle($FieldOfView.rotation, direction.angle(), smoothing_scale)
 
 func is_shooting() -> bool:
 	return Input.is_action_pressed("fire") && can_shoot
@@ -87,11 +105,9 @@ func get_mouse_direction() -> Vector2:
 	return get_global_mouse_position() - position
 
 func _on_body_entered(body: Node2D) -> void:
-	#pass
-	hide()
-	hit.emit()
-	$CollisionShape2D.set_deferred("disabled", true)
-	get_tree().call_group("bullets", "queue_free")
+	if (body.is_in_group("mobs")):
+		hit.emit()
+		die()
 
 func start_gun_cooldown():
 	can_shoot = false

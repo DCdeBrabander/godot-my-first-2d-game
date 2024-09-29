@@ -6,6 +6,7 @@ var high_score_key := "high_score"
 var high_score = 0
 var current_score = 0
 var save_resource: SaveDataResource
+var player_position: Vector2 = Vector2.ZERO
 
 func _init():
 	high_score = get_high_score()
@@ -39,7 +40,6 @@ func get_high_score():
 
 func get_save_data_resource() -> SaveDataResource:
 	save_resource = SaveDataResource.load_or_create()
-	print(save_resource)
 	return save_resource
 
 func run_one_shot_timer(time: float = 1.0):
@@ -47,3 +47,10 @@ func run_one_shot_timer(time: float = 1.0):
 
 func get_viewport_size() -> Vector2: 
 	return get_viewport().get_visible_rect().size
+	
+	
+func set_current_player_position(position):
+	player_position = position
+	
+func get_current_player_position():
+	return player_position
