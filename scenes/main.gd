@@ -10,9 +10,9 @@ func _ready():
 func new_game():
 	Global.set_current_score(0)
 	$HUD.show_highscore(Global.get_high_score()).show_game_message("Get ready")
-	$Player.start(viewport_size.get_center())
+	$Player.start($LevelGenerator.get_random_spawn_point())
 	$StartTimer.start()
-	$Music.play()
+	#$Music.play()
 
 func game_over():
 	$HUD.show_game_over()
@@ -20,11 +20,11 @@ func game_over():
 	$ScoreTimer.stop()
 	$MobTimer.stop()
 	$Music.stop()
-	$DeathSound.play()
+	#$DeathSound.play()
 
 func _on_mob_timer_timeout() -> void:
 	var mob = mob_scene.instantiate() 
-	mob.initialize($LevelGenerator.get_spawn_point())
+	mob.initialize($LevelGenerator.get_random_spawn_point())
 	add_child(mob)
 
 func _on_score_timer_timeout():

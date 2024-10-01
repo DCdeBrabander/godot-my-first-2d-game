@@ -1,6 +1,7 @@
 extends Node
 
 signal update_score
+signal move_player_position
 
 var high_score_key := "high_score"
 var high_score = 0
@@ -48,9 +49,12 @@ func run_one_shot_timer(time: float = 1.0):
 func get_viewport_size() -> Vector2: 
 	return get_viewport().get_visible_rect().size
 	
-	
-func set_current_player_position(position):
+func update_player_position(position):
 	player_position = position
+
+func move_player_to(position):
+	update_player_position(position)
+	move_player_position.emit(position)
 	
 func get_current_player_position():
 	return player_position

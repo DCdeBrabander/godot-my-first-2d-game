@@ -19,6 +19,10 @@ var bullet_direction = Vector2(1, 0)
 var last_player_direction = Vector2.ZERO
 var current_player_state = PLAYER_STATES.DEAD
 
+func _ready() -> void:
+	screen_size = get_viewport_rect().size
+	hide()
+	
 func start(_position: Vector2):
 	position = _position
 	alive()
@@ -34,10 +38,6 @@ func alive():
 	$CollisionShape2D.disabled = false
 	show()
 
-func _ready() -> void:
-	screen_size = get_viewport_rect().size
-	hide()
-
 func _process(delta: float) -> void:
 	if (current_player_state == PLAYER_STATES.DEAD): return
 	
@@ -49,18 +49,19 @@ func _process(delta: float) -> void:
 		
 	if (is_shooting()): shoot(view_direction)
 
+func update_position(_position):
+	position = _position
+	
 func move_player(delta):
 	var current_player_direction: Vector2 = get_move_direction()
 	var player_velocity: Vector2 = Vector2.ZERO
 
 	if current_player_direction.length() > 0:
 		player_velocity = current_player_direction.normalized() * speed
+		update_position(position + player_velocity * delta)
+		Global.update_player_position(position)
 		$AnimatedSprite2D.play()
-	else:
-		$AnimatedSprite2D.stop()
-
-	position += player_velocity * delta
-	Global.set_current_player_position(position)
+	else: $AnimatedSprite2D.stop()
 
 func rotate_field_of_view(direction: Vector2, smoothing_scale: float = 0.1):
 	var scale = Vector2(1, 1)

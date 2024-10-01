@@ -3,6 +3,8 @@ extends RigidBody2D
 @export var health: int = 1
 @export var score_on_kill: int = 2
 
+var current_behaviour: Behaviour = Behaviour.FOLLOW
+
 enum CausesOfDeath {
 	OUT_OF_BOUNDS,
 	KILLED
@@ -11,8 +13,6 @@ enum CausesOfDeath {
 enum Behaviour {
 	FOLLOW
 }
-
-var current_behaviour: Behaviour = Behaviour.FOLLOW
 
 func initialize(start_position: Vector2):
 	position = start_position
