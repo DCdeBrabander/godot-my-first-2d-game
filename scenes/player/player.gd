@@ -1,4 +1,4 @@
-extends Area2D
+extends CharacterBody2D
 
 signal hit
 
@@ -48,9 +48,6 @@ func _process(delta: float) -> void:
 	set_animation(view_direction)
 		
 	if (is_shooting()): shoot(view_direction)
-
-func update_position(_position):
-	position = _position
 	
 func move_player(delta):
 	var current_player_direction: Vector2 = get_move_direction()
@@ -58,7 +55,7 @@ func move_player(delta):
 
 	if current_player_direction.length() > 0:
 		player_velocity = current_player_direction.normalized() * speed
-		update_position(position + player_velocity * delta)
+		move_and_collide(player_velocity * delta)
 		Global.update_player_position(position)
 		$AnimatedSprite2D.play()
 	else: $AnimatedSprite2D.stop()

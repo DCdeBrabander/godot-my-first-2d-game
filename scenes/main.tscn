@@ -45,6 +45,8 @@ color = Color(0.0605303, 0.0605303, 0.0605303, 1)
 [node name="Player" parent="." instance=ExtResource("3_tdnuh")]
 z_index = 10
 position = Vector2(720, 450)
+speed = null
+bullet_cooldown = null
 
 [node name="TextureRect" type="TextureRect" parent="."]
 visible = false

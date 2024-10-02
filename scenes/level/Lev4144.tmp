@@ -125,6 +125,13 @@ sources/0 = SubResource("TileSetAtlasSource_0h7kh")
 [node name="LevelGenerator" type="Node2D"]
 z_index = 1
 script = ExtResource("1_jh6go")
+tile_size = null
+level_size = null
+min_room_size = null
+max_room_size = null
+min_corridor_width = null
+max_corridor_width = null
+generation_fail_limit = null
 
 [node name="TileMapLayer" type="TileMapLayer" parent="."]
 show_behind_parent = true
