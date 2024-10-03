@@ -24,7 +24,7 @@ func _ready() -> void:
 	hide()
 	
 func start(_position: Vector2):
-	position = _position
+	self.position = _position
 	alive()
 
 func die():
@@ -49,14 +49,14 @@ func _process(delta: float) -> void:
 		
 	if (is_shooting()): shoot(view_direction)
 	
-func move_player(delta):
+func move_player(delta: float):
 	var current_player_direction: Vector2 = get_move_direction()
 	var player_velocity: Vector2 = Vector2.ZERO
 
 	if current_player_direction.length() > 0:
 		player_velocity = current_player_direction.normalized() * speed
 		move_and_collide(player_velocity * delta)
-		Global.update_player_position(position)
+		Global.update_player_position(self.position)
 		$AnimatedSprite2D.play()
 	else: $AnimatedSprite2D.stop()
 
@@ -66,7 +66,7 @@ func rotate_field_of_view(direction: Vector2, smoothing_scale: float = 0.1):
 	
 	$FieldOfView.scale = scale
 	$FieldOfView.offset = offset
-	$FieldOfView.position = position.normalized()
+	$FieldOfView.position = self.position.normalized()
 	$FieldOfView.rotation = lerp_angle($FieldOfView.rotation, direction.angle(), smoothing_scale)
 
 func is_shooting() -> bool:
@@ -75,7 +75,9 @@ func is_shooting() -> bool:
 func shoot(direction: Vector2):
 	var bullet_instance = bullet.instantiate()
 	get_tree().root.add_child(bullet_instance)
-	bullet_instance.start(position, direction) 
+	var start_position = (self.position + Vector2(100  * direction.normalized().x, 100 * direction.normalized().y))
+	print(start_position, position, self.position)
+	bullet_instance.start(start_position, direction)
 	start_gun_cooldown()
 
 func set_animation(velocity):
@@ -89,14 +91,10 @@ func set_animation(velocity):
 
 func get_move_direction():
 	var velocity = Vector2.ZERO
-	if Input.is_action_pressed("move_right"):
-		velocity.x += 1
-	if Input.is_action_pressed("move_left"):
-		velocity.x -= 1
-	if Input.is_action_pressed("move_down"):
-		velocity.y += 1
-	if Input.is_action_pressed("move_up"):
-		velocity.y -= 1
+	if Input.is_action_pressed("move_right"): velocity.x += 1
+	if Input.is_action_pressed("move_left"): velocity.x -= 1
+	if Input.is_action_pressed("move_down"): velocity.y += 1
+	if Input.is_action_pressed("move_up"): velocity.y -= 1
 	return velocity
 	
 func get_mouse_direction() -> Vector2:

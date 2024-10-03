@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dhbfkic6pbxbe"]
+[gd_scene load_steps=9 format=4 uid="uid://dhbfkic6pbxbe"]
 
 [ext_resource type="Script" path="res://scenes/level/level_generator.gd" id="1_jh6go"]
 [ext_resource type="Texture2D" uid="uid://k7uehj0d00cv" path="res://tileset.png" id="2_6k1r8"]
@@ -22,8 +22,11 @@ texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-1.5, 32, -1, -1.5, 32, -1, 32, -32, -32, -32, -32, 32)
 1:0/0 = 0
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -3, 1.5, -2.5, 1.5, 32, 32, 32, 32, 32, 32, -32, -32, -32)
 2:0/0 = 0
+2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-2.5, -32, -3, 3, 32, 1.5, 32, 3.5, 32, 32, -32, 32, -32, -32)
 3:0/0 = 0
+3:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0.5, -32, 0, 5, -32, 4, -32, 32, 28, 32, 28.5, -32)
 4:0/0 = 0
 4:0/0/occlusion_layer_0/polygon = SubResource("OccluderPolygon2D_bcc3t")
 4:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, 0.5, 32, 0, 32, -32, -32, -32)
@@ -114,10 +117,20 @@ texture_region_size = Vector2i(64, 64)
 8:7/0 = 0
 9:7/0 = 0
 10:7/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+4:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -0.5, 1, -0.5, 0.5, -32, -32, -32)
+5:1/0 = 0
+5:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-1, -1.5, 32, -1.5, 32, -32, -1.5, -32)
+6:1/0 = 0
+6:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-1, 0.5, 32, 0.5, 32, 32, -1, 32)
+7:1/0 = 0
+7:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, 0, 1, 0, 1, 32, -32, 32)
 
 [sub_resource type="TileSet" id="TileSet_b2bn6"]
 tile_size = Vector2i(64, 64)
 occlusion_layer_0/light_mask = 1
+occlusion_layer_0/sdf_collision = true
 physics_layer_0/collision_layer = 1
 navigation_layer_0/layers = 1
 sources/0 = SubResource("TileSetAtlasSource_0h7kh")
@@ -126,7 +139,8 @@ sources/0 = SubResource("TileSetAtlasSource_0h7kh")
 z_index = 1
 script = ExtResource("1_jh6go")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="TileMapLayer" type="TileMapLayer" parent="." groups=["tiles"]]
 show_behind_parent = true
 z_index = 1
+tile_map_data = PackedByteArray("AAABAAAAAAAAAAAAAAABAAEAAAAGAAAAAAABAAMAAAAGAAAAAAABAAIAAAAGAAAAAAACAAEAAAABAAEAAAACAAIAAAABAAEAAAACAAMAAAABAAEAAAACAAAAAAAEAAAAAAADAAAAAAAEAAAAAAAEAAAAAAAEAAEAAAAFAAAAAAAFAAEAAAAEAP//AAAGAAAAAAAFAP//AAAHAAAAAAAGAAAAAAAEAAAAAAAHAAAAAAAEAAAAAAAIAAAAAAABAAAAAAAIAAEAAAAHAAAAAAAIAAIAAAAHAAAAAAAIAAMAAAAHAAAAAAABAAQAAAACAAAAAAAIAAQAAAADAAAAAAAHAAQAAAAFAAAAAAAGAAQAAAAFAAAAAAAEAAQAAAAFAAAAAAAFAAQAAAAFAAAAAAADAAQAAAAFAAAAAAACAAQAAAAFAAAAAAADAAEAAAABAAEAAAADAAIAAAABAAEAAAADAAMAAAABAAEAAAAEAAEAAAABAAEAAAAEAAIAAAABAAEAAAAEAAMAAAABAAEAAAAFAAEAAAABAAEAAAAFAAIAAAABAAEAAAAFAAMAAAABAAEAAAAGAAEAAAABAAEAAAAGAAIAAAABAAEAAAAGAAMAAAABAAEAAAAHAAEAAAABAAEAAAAHAAIAAAABAAEAAAAHAAMAAAABAAEAAAAEAP7/AAAGAAAAAAAFAP7/AAAHAAAAAAA=")
 tile_set = SubResource("TileSet_b2bn6")

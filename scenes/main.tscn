@@ -45,8 +45,6 @@ color = Color(0.0605303, 0.0605303, 0.0605303, 1)
 [node name="Player" parent="." instance=ExtResource("3_tdnuh")]
 z_index = 10
 position = Vector2(720, 450)
-speed = null
-bullet_cooldown = null
 
 [node name="TextureRect" type="TextureRect" parent="."]
 visible = false
@@ -61,7 +59,7 @@ stretch_mode = 1
 [node name="HUD" parent="." instance=ExtResource("4_4kipy")]
 
 [node name="MobTimer" type="Timer" parent="."]
-wait_time = 0.5
+wait_time = 1.996
 
 [node name="ScoreTimer" type="Timer" parent="."]
 
