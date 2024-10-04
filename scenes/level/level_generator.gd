@@ -6,8 +6,8 @@ extends Node2D
 @export var level_size: Vector2 = Vector2(100, 100)
 @export var min_room_size = Vector2(10, 10)
 @export var max_room_size = Vector2(30, 30)
-@export var min_corridor_width = 4
-@export var max_corridor_width = 6
+@export var min_corridor_width = 3
+@export var max_corridor_width = 7
 @export var max_room_amount: int = randi_range(3, 10)
 @export var generation_fail_limit = 10
 
@@ -54,6 +54,8 @@ func generate_level():
 	# Lay floor tiles for all generated rooms (and corridors)
 	_generate_floor_tiles()
 	
+	tile_map_layer.update_internals()
+	
 	# now add walls on top of fresh floor
 	_generate_walls()
 
@@ -86,10 +88,19 @@ func _generate_walls():
 		# then check normal walls, always(?) have 3 missing pieces in single 'side' 
 		var missing_tile_count = missing_tiles.size()
 		
-		tile_map_layer.update_internals()
 		if (missing_tile_count == 1):
+			# SINGLE WALLS
+			if (missing_tiles.has("TOP")):
+				_set_cell_at(tile_vector, TILE_SET["WALL_TOP"])
+			elif (missing_tiles.has("BOTTOM")):
+				_set_cell_at(tile_vector, TILE_SET["WALL_BOTTOM"])
+			elif (missing_tiles.has("LEFT")):
+				_set_cell_at(tile_vector, TILE_SET["WALL_LEFT"])
+			elif (missing_tiles.has("RIGHT")):
+				_set_cell_at(tile_vector, TILE_SET["WALL_RIGHT"])
+
 			#EDGES
-			if (missing_tiles.has("TOP_LEFT")):
+			elif (missing_tiles.has("TOP_LEFT")):
 				_set_cell_at(tile_vector, TILE_SET["WALL_EDGE_TOP_LEFT"])
 			elif (missing_tiles.has("TOP_RIGHT")): 
 				_set_cell_at(tile_vector, TILE_SET["WALL_EDGE_TOP_RIGHT"])
@@ -97,8 +108,19 @@ func _generate_walls():
 				_set_cell_at(tile_vector, TILE_SET["WALL_EDGE_BOTTOM_LEFT"])
 			elif (missing_tiles.has("BOTTOM_RIGHT")): 
 				_set_cell_at(tile_vector, TILE_SET["WALL_EDGE_BOTTOM_RIGHT"])
+
+		elif missing_tile_count == 2:
+			if ((missing_tiles.has("TOP_LEFT") || missing_tiles.has("TOP_RIGHT")) && missing_tiles.has("TOP")): #top side
+				_set_cell_at(tile_vector, TILE_SET["WALL_TOP"])
+			elif ((missing_tiles.has("TOP_RIGHT") || missing_tiles.has("BOTTOM_RIGHT")) && missing_tiles.has("RIGHT")): # right side
+				_set_cell_at(tile_vector, TILE_SET["WALL_RIGHT"])
+			elif ((missing_tiles.has("BOTTOM_LEFT") || missing_tiles.has("BOTTOM_RIGHT")) && missing_tiles.has("BOTTOM")): #bottom side
+				_set_cell_at(tile_vector, TILE_SET["WALL_BOTTOM"])
+			elif  ((missing_tiles.has("TOP_LEFT") || missing_tiles.has("BOTTOM_LEFT")) && missing_tiles.has("LEFT")): #left side
+				_set_cell_at(tile_vector, TILE_SET["WALL_LEFT"])
 		
-		if missing_tile_count >= 3:
+		elif missing_tile_count >= 3:
+			print(missing_tile_count)
 			# CORNERS
 			if (missing_tiles.has("LEFT") && missing_tiles.has("TOP_LEFT") && missing_tiles.has("TOP")):
 				_set_cell_at(tile_vector, TILE_SET["WALL_CORNER_TOP_LEFT"])
@@ -117,9 +139,8 @@ func _generate_walls():
 				_set_cell_at(tile_vector, TILE_SET["WALL_BOTTOM"])
 			elif  (missing_tiles.has("TOP_LEFT") && missing_tiles.has("LEFT") && missing_tiles.has("BOTTOM_LEFT")): #left side
 				_set_cell_at(tile_vector, TILE_SET["WALL_LEFT"])
-
+		
 		print(missing_tiles)
-			
 
 func _generate_floor_tiles():
 	for tile_vector: Vector2 in _generated_level.keys():
@@ -167,20 +188,16 @@ func _add_room(room):
 			_generated_level[Vector2(x, y)] = TILE_SET["FLOOR"]
 	
 func _add_corridor(start, end, constant, axis):
-	var _corridor_width = randi_range(min_corridor_width, max_corridor_width)
+	var _allowed_corridor_widths = range(min_corridor_width, max_corridor_width, 2)
+	var _corridor_width = _allowed_corridor_widths[randi() % _allowed_corridor_widths.size()]
 	var _startPoint = min(start, end)
 	var _endPoint = max(start, end) + 1
 	
 	for t in range(_startPoint, _endPoint):
-		var points = []
-		for _extra_width in range(1, _corridor_width):
+		for _extra_width in _corridor_width:
 			match axis:
-				Vector2.AXIS_X: 
-					points.append(Vector2(t, constant + _extra_width))
-				Vector2.AXIS_Y: 
-					points.append(Vector2(constant + _extra_width, t))
-		for point in points:
-			_generated_level[point] = TILE_SET["FLOOR"]
+				Vector2.AXIS_X: _generated_level[Vector2(t, constant + _extra_width)] = TILE_SET["FLOOR"]
+				Vector2.AXIS_Y: _generated_level[Vector2(constant + _extra_width, t)] = TILE_SET["FLOOR"]
 
 func _room_intersects(new_room: Rect2) -> bool:
 	if (_generated_rooms.size() == 0): return false

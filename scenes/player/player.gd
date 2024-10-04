@@ -76,7 +76,6 @@ func shoot(direction: Vector2):
 	var bullet_instance = bullet.instantiate()
 	get_tree().root.add_child(bullet_instance)
 	var start_position = (self.position + Vector2(100  * direction.normalized().x, 100 * direction.normalized().y))
-	print(start_position, position, self.position)
 	bullet_instance.start(start_position, direction)
 	start_gun_cooldown()
 
