@@ -53,6 +53,9 @@ func show_game_over():
 	
 	return self
 
+func show_current_seed(seed: String):
+	$CurrentSeed.text = seed
+
 func _on_start_button_pressed() -> void:
 	$StartButton.hide()
 	$NewHighScoreLabel.hide()

@@ -1,5 +1,11 @@
 extends CharacterBody2D
 
+@export var speed = 800
+@export var bullet_cooldown = 0.25
+@export var bullet: PackedScene
+
+@onready var fov_light := $FieldOfViewLight
+
 signal hit
 
 enum PLAYER_STATES {
@@ -7,17 +13,12 @@ enum PLAYER_STATES {
 	DEAD
 }
 
-@export var speed = 800
-@export var bullet_cooldown = 0.25
-@export var bullet: PackedScene
-
-@onready var fov_light := $FieldOfViewLight
-
 var screen_size
 var can_shoot = true
 var bullet_direction = Vector2(1, 0)
 var last_player_direction = Vector2.ZERO
 var current_player_state = PLAYER_STATES.DEAD
+var flashlight_enabled = true
 
 func _ready() -> void:
 	screen_size = get_viewport_rect().size
@@ -43,6 +44,7 @@ func _process(delta: float) -> void:
 	
 	var view_direction: Vector2 = get_mouse_direction()
 
+	toggle_flashlight()
 	move_player(delta)
 	rotate_field_of_view(view_direction)
 	set_animation(view_direction)
@@ -60,7 +62,14 @@ func move_player(delta: float):
 		$AnimatedSprite2D.play()
 	else: $AnimatedSprite2D.stop()
 
+func toggle_flashlight():
+	if Input.is_action_just_pressed("flashlight"):
+		flashlight_enabled = ! flashlight_enabled
+		$FieldOfView.enabled = flashlight_enabled
+	
 func rotate_field_of_view(direction: Vector2, smoothing_scale: float = 0.1):
+	if ! $FieldOfView.enabled: return
+	
 	var scale = Vector2(1, 1)
 	var offset = Vector2(350, 0)
 	

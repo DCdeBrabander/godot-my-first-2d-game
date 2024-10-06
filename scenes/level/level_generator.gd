@@ -1,5 +1,7 @@
 extends Node2D
 
+signal seed_update
+
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
 @onready var room_light_scene = preload("res://scenes/lighting/RoomLight.tscn")
 
@@ -9,13 +11,15 @@ extends Node2D
 @export var max_room_size = Vector2(30, 30)
 @export var min_corridor_width = 3
 @export var max_corridor_width = 7
-@export var max_room_amount: int = 20
+@export var max_room_amount: int = 30
 @export var generation_fail_limit = 10
 
-var _generated_level := {}
-var _generated_rooms: Array = []
-var _generated_room_lighting: Array = []
-var _generated_walls := {}
+var _generated_level := {
+	"floor": {},
+	"rooms": [],
+	"lights": {},
+	"walls": {}
+}
 
 var rng: RandomNumberGenerator
 
@@ -46,23 +50,28 @@ func _ready():
 	tile_map_layer.position = Vector2(0, 0)
 	rng = RandomNumberGenerator.new()
 	generate_level()
+
+func generate_dark_color():
+	return Color(randf_range(0.0, 0.2), randf_range(0.0, 0.2), randf_range(0.0, 0.2))
 	
 func generate_level():
 	rng.randomize()
+	seed_update.emit(rng.seed)
 	tile_map_layer.clear()
+	
+	set_background()
 
 	# Random generate some rooms
-	_generate_rooms(max_room_amount, generation_fail_limit)
+	_generate_rooms(max_room_amount)
 	
 	# Lay floor tiles for all generated rooms (and corridors)
 	_generate_floor_tiles()
 	
-	tile_map_layer.update_internals()
-	
 	# now add walls on top of fresh floor
 	_generate_walls()
-	
-	
+
+func set_background():
+	RenderingServer.set_default_clear_color(generate_dark_color())
 
 func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
 	var x_snapped = snapped(tile.x, 1)
@@ -80,100 +89,100 @@ func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
 	}
 
 func _generate_walls():
-	
-	for tile_vector: Vector2 in _generated_level.keys():
+	for tile_vector: Vector2 in _generated_level["floor"].keys():
 		var surrounding_tiles = get_surrounding_tiles_at(tile_vector)
 		var missing_tiles: Dictionary = {}
 		
 		for surrounding_tile_key in surrounding_tiles.keys():
 			var surrounding_tile_vector = surrounding_tiles[surrounding_tile_key]
-			if (tile_map_layer.get_cell_source_id(surrounding_tile_vector) == -1 && !_generated_walls.has(surrounding_tile_key)):
+			if (tile_map_layer.get_cell_source_id(surrounding_tile_vector) == -1):
 				missing_tiles[surrounding_tile_key] = surrounding_tile_vector
 				
-		# first check edges, 1 missing tile piece in diagonal position
-		# then check corners, have 3 missing pieces in both directions
-		# then check normal walls, always(?) have 3 missing pieces in single 'side' 
+		# first check edges: 1 missing tile piece in diagonal position
+		# second, check corners: have 3 missing pieces in both directions
+		# Third, check normal walls: Leftovers with 1 directly adjacent tile missing
 		var missing_tile_count = missing_tiles.size()
 		if (missing_tile_count == 1):
-			if (missing_tiles.has("TOP_LEFT")):
-				_generated_walls[tile_vector] = TILE_SET["WALL_EDGE_TOP_LEFT"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_EDGE_TOP_LEFT"])
-			elif (missing_tiles.has("TOP_RIGHT")): 
-				_generated_walls[tile_vector] = TILE_SET["WALL_EDGE_TOP_RIGHT"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_EDGE_TOP_RIGHT"])
-			elif (missing_tiles.has("BOTTOM_LEFT")):
-				_generated_walls[tile_vector] = TILE_SET["WALL_EDGE_BOTTOM_LEFT"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_EDGE_BOTTOM_LEFT"])
-			elif (missing_tiles.has("BOTTOM_RIGHT")): 
-				_generated_walls[tile_vector] = TILE_SET["WALL_EDGE_BOTTOM_RIGHT"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_EDGE_BOTTOM_RIGHT"])
-			# SINGLE WALLS
-			if (missing_tiles.has("TOP")):
-				_generated_walls[tile_vector] = TILE_SET["WALL_TOP"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_TOP"])
-			elif (missing_tiles.has("BOTTOM")):
-				_generated_walls[tile_vector] = TILE_SET["WALL_BOTTOM"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_BOTTOM"])
-			elif (missing_tiles.has("LEFT")):
-				_generated_walls[tile_vector] = TILE_SET["WALL_LEFT"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_LEFT"])
-			elif (missing_tiles.has("RIGHT")):
-				_generated_walls[tile_vector] = TILE_SET["WALL_RIGHT"]
-				_set_tile_at(tile_vector, TILE_SET["WALL_RIGHT"])
+			_add_edge_wall_at(tile_vector, missing_tiles)
+			_add_simple_wall_at(tile_vector, missing_tiles)
 			continue
 		
-		if (missing_tiles.has("LEFT") && missing_tiles.has("TOP")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_CORNER_TOP_LEFT"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_CORNER_TOP_LEFT"])
+		_add_simple_wall_at(tile_vector, missing_tiles)
+		_add_corner_wall_at(tile_vector, missing_tiles)
 
-			continue
-		elif (missing_tiles.has("TOP") && missing_tiles.has("RIGHT")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_CORNER_TOP_RIGHT"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_CORNER_TOP_RIGHT"])
+func _add_simple_wall_at(vector: Vector2, surrounding_vectors_without_tiles: Dictionary):
+	var tile_type: String = "UNKNOWN"
+	
+	if (surrounding_vectors_without_tiles.has("TOP")):
+		tile_type = "WALL_TOP"
+	elif (surrounding_vectors_without_tiles.has("BOTTOM")):
+		tile_type = "WALL_BOTTOM"
+	elif (surrounding_vectors_without_tiles.has("LEFT")):
+		tile_type = "WALL_LEFT"
+	elif (surrounding_vectors_without_tiles.has("RIGHT")):
+		tile_type = "WALL_RIGHT"
+	
+	if (tile_type != "UNKNOWN"):
+		_generated_level["walls"][vector] = tile_type
+		_generated_level["floor"].erase(vector)
+		_set_tile_at(vector, TILE_SET[tile_type])
+		return true
 
-			continue
-		elif (missing_tiles.has("LEFT") && missing_tiles.has("BOTTOM")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_CORNER_BOTTOM_LEFT"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_CORNER_BOTTOM_LEFT"])
+	return false
+	
+func _add_edge_wall_at(vector: Vector2, surrounding_vectors_without_tiles: Dictionary):
+	var tile_type: String = "UNKNOWN"
+	
+	if (surrounding_vectors_without_tiles.has("TOP_LEFT")):
+		tile_type = "WALL_EDGE_TOP_LEFT"
+	elif (surrounding_vectors_without_tiles.has("TOP_RIGHT")): 
+		tile_type = "WALL_EDGE_TOP_RIGHT"
+	elif (surrounding_vectors_without_tiles.has("BOTTOM_LEFT")):
+		tile_type = "WALL_EDGE_BOTTOM_LEFT"
+	elif (surrounding_vectors_without_tiles.has("BOTTOM_RIGHT")): 
+		tile_type = "WALL_EDGE_BOTTOM_RIGHT"
+	
+	if (tile_type != "UNKNOWN"):
+		_generated_level["walls"][vector] = tile_type
+		_generated_level["floor"].erase(vector)
+		_set_tile_at(vector, TILE_SET[tile_type])
+		return true
 
-			continue
-		elif  (missing_tiles.has("RIGHT") && missing_tiles.has("BOTTOM")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_CORNER_BOTTOM_RIGHT"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_CORNER_BOTTOM_RIGHT"])
+	return false
+	
+func _add_corner_wall_at(vector: Vector2, surrounding_vectors_without_tiles: Dictionary):
+	var tile_type: String = "UNKNOWN"
+	
+	if (surrounding_vectors_without_tiles.has("LEFT") && surrounding_vectors_without_tiles.has("TOP")):
+		tile_type = "WALL_CORNER_TOP_LEFT"
+	elif (surrounding_vectors_without_tiles.has("TOP") && surrounding_vectors_without_tiles.has("RIGHT")):
+		tile_type = "WALL_CORNER_TOP_RIGHT"
+	elif (surrounding_vectors_without_tiles.has("LEFT") && surrounding_vectors_without_tiles.has("BOTTOM")):
+		tile_type = "WALL_CORNER_BOTTOM_LEFT"
+	elif  (surrounding_vectors_without_tiles.has("RIGHT") && surrounding_vectors_without_tiles.has("BOTTOM")):
+		tile_type = "WALL_CORNER_BOTTOM_RIGHT"
+	
+	if (tile_type != "UNKNOWN"):
+		_generated_level["walls"][vector] = tile_type
+		_generated_level["floor"].erase(vector)
+		_set_tile_at(vector, TILE_SET[tile_type])
+		return true
 
-			continue	
-			
-		# SINGLE WALLS
-		if (missing_tiles.has("TOP")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_TOP"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_TOP"])
-			continue
-		elif (missing_tiles.has("BOTTOM")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_BOTTOM"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_BOTTOM"])
-			continue
-		elif (missing_tiles.has("LEFT")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_LEFT"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_LEFT"])
-			continue
-		elif (missing_tiles.has("RIGHT")):
-			_generated_walls[tile_vector] = TILE_SET["WALL_RIGHT"]
-			_set_tile_at(tile_vector, TILE_SET["WALL_RIGHT"])
-			continue			
+	return false
 		
-
 func _generate_floor_tiles():
-	for tile_vector: Vector2 in _generated_level.keys():
-		_set_tile_at(tile_vector, _generated_level[tile_vector])
+	for tile_vector: Vector2 in _generated_level["floor"].keys():
+		_set_tile_at(tile_vector, _generated_level["floor"][tile_vector])
 
-# Needs a lot more logic later
-func get_random_spawn_point():
-	var random_tile = _generated_level.keys()[randi() % _generated_level.size()]
-	return random_tile * tile_size
+func get_random_spawn_point() -> Vector2:
+	var random_selected_room: Rect2 = _generated_level["rooms"][randi() % _generated_level["rooms"].size()]
+	
+	var random_position_x = randi_range(random_selected_room.position.x + 1, random_selected_room.position.x + random_selected_room.size.x - 1)
+	var random_position_y = randi_range(random_selected_room.position.y + 1, random_selected_room.position.y + random_selected_room.size.y - 1)
+	
+	return Vector2(random_position_x, random_position_y) * tile_size
 
-func _generate_rooms(rooms_left, max_retries):
-	if (max_retries <= 0): return
-		
+func _generate_rooms(rooms_left):
 	for i in range(rooms_left):
 		var new_room: Rect2 = _generate_room()
 		
@@ -183,7 +192,7 @@ func _generate_rooms(rooms_left, max_retries):
 		_add_room(new_room)
 		_add_lighting(new_room)
 		
-		if(_generated_rooms.size() > 1): _generate_hallway(_generated_rooms[ -2 ], new_room)
+		if(_generated_level["rooms"].size() > 1): _generate_hallway(_generated_level["rooms"][ -2 ], new_room)
 
 # Simply randomly generate a rectangle with a random position within the maximum size of our map
 # naively try again if it intersects with one of our generated rooms
@@ -203,10 +212,10 @@ func _generate_hallway(roomA: Rect2, roomB: Rect2):
 		_add_corridor(centerB.x, centerA.x, centerA.y, Vector2.AXIS_X)
 
 func _add_room(room):
-	_generated_rooms.append(room)
+	_generated_level["rooms"].append(room)
 	for x in range(room.position.x, room.end.x):
 		for y in range(room.position.y, room.end.y):
-			_generated_level[Vector2(x, y)] = TILE_SET["FLOOR"]
+			_generated_level["floor"][Vector2(x, y)] = TILE_SET["FLOOR"]
 	
 func _add_corridor(start, end, constant, axis):
 	var _allowed_corridor_widths = range(min_corridor_width, max_corridor_width, 2)
@@ -217,20 +226,19 @@ func _add_corridor(start, end, constant, axis):
 	for t in range(_startPoint, _endPoint):
 		for _extra_width in _corridor_width:
 			match axis:
-				Vector2.AXIS_X: _generated_level[Vector2(t, constant + _extra_width)] = TILE_SET["FLOOR"]
-				Vector2.AXIS_Y: _generated_level[Vector2(constant + _extra_width, t)] = TILE_SET["FLOOR"]
+				Vector2.AXIS_X: _generated_level["floor"][Vector2(t, constant + _extra_width)] = TILE_SET["FLOOR"]
+				Vector2.AXIS_Y: _generated_level["floor"][Vector2(constant + _extra_width, t)] = TILE_SET["FLOOR"]
 
 func _room_intersects(new_room: Rect2) -> bool:
-	if (_generated_rooms.size() == 0): return false
+	if (_generated_level["rooms"].size() == 0): return false
 	var exists := false
-	for existing_room in _generated_rooms:
+	for existing_room in _generated_level["rooms"]:
 		if (new_room.intersects(existing_room, true)):
 			exists = true
 			break
 	return exists
 	
 func _set_tile_at(vector: Vector2, tile_atlas_coor: Vector2):
-	#print(tile_map_layer.get_cell_atlas_coords(vector))
 	tile_map_layer.set_cell(vector, 0, tile_atlas_coor, 0)
 
 func _add_lighting(room):
@@ -238,5 +246,7 @@ func _add_lighting(room):
 	var _new_light = room_light_scene.instantiate()
 	
 	_new_light.position = room_center
-	print(_new_light.position, _new_light)
 	add_child(_new_light)
+
+func get_current_seed():
+	return rng.get_seed()

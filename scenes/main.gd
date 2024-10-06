@@ -5,12 +5,15 @@ extends Node
 var viewport_size
 
 func _ready():
-	viewport_size = get_viewport().get_visible_rect()
+	 # Get the root viewport
+	var viewport = get_viewport()
+	viewport_size = viewport.get_visible_rect()
 	
 func new_game():
 	Global.set_current_score(0)
 	$HUD.show_highscore(Global.get_high_score()).show_game_message("Get ready")
 	$Player.start($LevelGenerator.get_random_spawn_point())
+	$HUD.show_current_seed(str($LevelGenerator.get_current_seed()))
 	$StartTimer.start()
 	#$Music.play()
 
