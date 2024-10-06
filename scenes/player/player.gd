@@ -7,7 +7,7 @@ enum PLAYER_STATES {
 	DEAD
 }
 
-@export var speed = 400
+@export var speed = 800
 @export var bullet_cooldown = 0.25
 @export var bullet: PackedScene
 

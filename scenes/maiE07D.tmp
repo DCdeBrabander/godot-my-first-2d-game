@@ -37,6 +37,7 @@ height = 1.0
 max_distance = 1000.0
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
+visible = false
 position = Vector2(0, -1)
 color = Color(0.0588235, 0.0588235, 0.0588235, 1)
 

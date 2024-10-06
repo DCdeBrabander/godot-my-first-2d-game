@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="YourFirst2DGame"
+config/version="0.1"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "Mobile")
 boot_splash/image="res://art/enemyFlyingAlt_1.png"
@@ -25,7 +26,6 @@ Global="*res://scripts/global.gd"
 
 window/size/viewport_width=1440
 window/size/viewport_height=900
-window/size/mode=2
 window/stretch/mode="canvas_items"
 window/stretch/scale=0.5
 

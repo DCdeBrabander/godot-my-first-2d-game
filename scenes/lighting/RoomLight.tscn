@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0aj018o2phk"]
+
+[ext_resource type="Texture2D" uid="uid://cgq0n3w5rd6yc" path="res://art/2d_lights_and_shadows_neutral_point_light.webp" id="1_7gjrp"]
+
+[node name="RoomLight" type="PointLight2D"]
+top_level = true
+color = Color(1, 0.776471, 0.486275, 0.776471)
+energy = 0.97
+texture = ExtResource("1_7gjrp")
+texture_scale = 2.03
