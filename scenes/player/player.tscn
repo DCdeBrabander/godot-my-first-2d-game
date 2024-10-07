@@ -42,6 +42,7 @@ height = 68.0
 position = Vector2(-889, -72)
 script = ExtResource("1_s674r")
 bullet = ExtResource("2_2jpb8")
+minimap_indicator = ExtResource("1_7ta4b")
 metadata/_edit_group_ = true
 
 [node name="FieldOfView" type="PointLight2D" parent="."]

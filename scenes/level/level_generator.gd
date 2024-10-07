@@ -6,7 +6,7 @@ signal seed_update
 @onready var room_light_scene = preload("res://scenes/lighting/RoomLight.tscn")
 
 @export var tile_size: Vector2 = Vector2(64, 64)
-@export var level_size: Vector2 = Vector2(500, 500)
+@export var max_level_tiles: Vector2 = Vector2(500, 500)
 @export var min_room_size = Vector2(10, 10)
 @export var max_room_size = Vector2(30, 30)
 @export var min_corridor_width = 3
@@ -15,8 +15,9 @@ signal seed_update
 @export var generation_fail_limit = 10
 
 var _generated_level := {
-	"floor": {},
+	"bounding_box": Rect2(0, 0, 0, 0),
 	"rooms": [],
+	"floor": {},
 	"lights": {},
 	"walls": {}
 }
@@ -59,24 +60,22 @@ func generate_level():
 	seed_update.emit(rng.seed)
 	tile_map_layer.clear()
 	
-	set_background()
+	set_background(generate_dark_color())
 
 	# Random generate some rooms
 	_generate_rooms(max_room_amount)
 	
+	# Map layout
 	# Lay floor tiles for all generated rooms (and corridors)
 	_generate_floor_tiles()
 	
 	# now add walls on top of fresh floor
 	_generate_walls()
 
-func set_background():
-	RenderingServer.set_default_clear_color(generate_dark_color())
+func set_background(color: Color):
+	RenderingServer.set_default_clear_color(color)
 
 func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
-	var x_snapped = snapped(tile.x, 1)
-	var y_snapped = snapped(tile.y, 1)
-	
 	return {
 		"LEFT": 		Vector2(tile.x - 1, 	tile.y		),	# left
 		"TOP_LEFT": 	Vector2(tile.x - 1, 	tile.y - 1	),	# top left
@@ -191,6 +190,7 @@ func _generate_rooms(rooms_left):
 			
 		_add_room(new_room)
 		_add_lighting(new_room)
+		_generated_level["bounding_box"] = _generated_level["bounding_box"].expand(new_room.size * tile_size)
 		
 		if(_generated_level["rooms"].size() > 1): _generate_hallway(_generated_level["rooms"][ -2 ], new_room)
 
@@ -198,7 +198,7 @@ func _generate_rooms(rooms_left):
 # naively try again if it intersects with one of our generated rooms
 func _generate_room() -> Rect2:
 	var room_size = Vector2(randi_range(min_room_size.x, max_room_size.x), randi_range(min_room_size.y, max_room_size.y))
-	var room_position = Vector2(randi_range(0, level_size.x), randi_range(0, level_size.y))
+	var room_position = Vector2(randi_range(0, max_level_tiles.x), randi_range(0, max_level_tiles.y))
 	return Rect2(room_position, room_size)
 	
 func _generate_hallway(roomA: Rect2, roomB: Rect2):
@@ -250,3 +250,9 @@ func _add_lighting(room):
 
 func get_current_seed():
 	return rng.get_seed()
+	
+func get_level_data():
+	return _generated_level
+
+func get_level_size():
+	return _generated_level["bounding_box"].size

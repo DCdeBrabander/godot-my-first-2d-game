@@ -4,6 +4,8 @@ extends CharacterBody2D
 @export var bullet_cooldown = 0.25
 @export var bullet: PackedScene
 
+@export var minimap_indicator: Texture2D
+
 @onready var fov_light := $FieldOfViewLight
 
 signal hit
@@ -119,3 +121,10 @@ func start_gun_cooldown():
 	
 func _on_gun_cooldown_timeout() -> void:
 	can_shoot = true
+
+func get_minimap_indicator_style() -> Dictionary:
+	return {
+		"size": Vector2(10, 10),
+		"color": Color(1, 1, 1),
+		"texture": minimap_indicator
+	}
