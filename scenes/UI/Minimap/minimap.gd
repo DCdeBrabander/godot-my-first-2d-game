@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 @onready var map_overlay = $MapOverlay
-@onready var level_representation = $MapOverlay/LevelRepresentation
+@onready var map = $MapOverlay/Map
 
 func _ready():
 	map_overlay.visible = false
@@ -15,11 +15,11 @@ func _ready():
 	
 	# Use the smaller of the two scale factors to ensure the world fits within the map overlay
 	var map_scale = min(scale_factor_x, scale_factor_y)
-	level_representation.set_map_scale(map_scale)
-	level_representation.set_world_size(level_size)
-	level_representation.set_map_size(map_overlay.size)
 	
-	level_representation.position = (map_overlay_size - (level_size * map_scale)) / 3
+	map.set_map_scale(map_scale)
+	map.set_world_size(level_size)
+	map.set_map_size(map_overlay.size)
+	map.position = (map_overlay_size - (level_size * map_scale)) / 2
 
 func toggle():
 	map_overlay.visible = !map_overlay.visible

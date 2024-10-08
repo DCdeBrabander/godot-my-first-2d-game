@@ -4,13 +4,11 @@ extends CharacterBody2D
 @export var bullet_cooldown = 0.25
 @export var bullet: PackedScene
 
-@export var minimap_indicator: Texture2D
-
 @onready var fov_light := $FieldOfViewLight
 
 signal hit
 
-enum PLAYER_STATES {
+enum PlayerStates {
 	ALIVE,
 	DEAD
 }
@@ -19,7 +17,7 @@ var screen_size
 var can_shoot = true
 var bullet_direction = Vector2(1, 0)
 var last_player_direction = Vector2.ZERO
-var current_player_state = PLAYER_STATES.DEAD
+var current_player_state = PlayerStates.DEAD
 var flashlight_enabled = true
 
 func _ready() -> void:
@@ -31,18 +29,18 @@ func start(_position: Vector2):
 	alive()
 
 func die():
-	current_player_state = PLAYER_STATES.DEAD
+	current_player_state = PlayerStates.DEAD
 	$CollisionShape2D.set_deferred("disabled", true)
 	get_tree().call_group("bullets", "queue_free")
 	hide()
 
 func alive():
-	current_player_state = PLAYER_STATES.ALIVE
+	current_player_state = PlayerStates.ALIVE
 	$CollisionShape2D.disabled = false
 	show()
 
 func _process(delta: float) -> void:
-	if (current_player_state == PLAYER_STATES.DEAD): return
+	if (current_player_state == PlayerStates.DEAD): return
 	
 	var view_direction: Vector2 = get_mouse_direction()
 
@@ -125,6 +123,5 @@ func _on_gun_cooldown_timeout() -> void:
 func get_minimap_indicator_style() -> Dictionary:
 	return {
 		"size": Vector2(10, 10),
-		"color": Color(1, 1, 1),
-		"texture": minimap_indicator
+		"color": Color(1, 0, 0),
 	}

@@ -4,8 +4,8 @@ extends Node
 
 @onready var Player = $Player
 @onready var LevelGenerator = $LevelGenerator
-@onready var Minimap = $Minimap
-var minimap_level_representation
+@onready var MinimapLayer = $Minimap
+@onready var Map = $Minimap/MapOverlay/Map
 
 var is_paused := false
 var viewport_size
@@ -14,23 +14,23 @@ func _ready():
 	var viewport = get_viewport()
 	viewport_size = viewport.get_visible_rect()
 	
-	minimap_level_representation = Minimap.get_node("MapOverlay/LevelRepresentation")
-	minimap_level_representation.set_level_generator(LevelGenerator)
-	minimap_level_representation.add_reference(Player)
-
+	Map.set_level_data(LevelGenerator.get_level_data())
+	Map.add_marker_for_node(Player)
 	
 func _process(delta: float):
-	listen_general_keys()
+	listen_key_events()
 	
-func listen_general_keys():
+func listen_key_events():
 	if Input.is_action_just_pressed("show_map"):
-		Minimap.toggle()
+		MinimapLayer.toggle()
 		
 	if Input.is_action_pressed("pause"):
 		is_paused = !is_paused
 		get_tree().paused = is_paused
 
 
+# Underneath is mostly updated tutorial structure. 
+# likely we want to replace/move/remove it later.
 func new_game():
 	Global.set_current_score(0)
 	$HUD.show_highscore(Global.get_high_score()).show_game_message("Get ready")

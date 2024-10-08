@@ -42,8 +42,24 @@ height = 68.0
 position = Vector2(-889, -72)
 script = ExtResource("1_s674r")
 bullet = ExtResource("2_2jpb8")
-minimap_indicator = ExtResource("1_7ta4b")
 metadata/_edit_group_ = true
+
+[node name="MinimapIndicator" type="TextureRect" parent="."]
+visible = false
+clip_contents = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -54.0
+offset_top = -67.5
+offset_right = 54.0
+offset_bottom = 67.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.105, 0.105)
+texture = ExtResource("1_7ta4b")
 
 [node name="FieldOfView" type="PointLight2D" parent="."]
 shadow_enabled = true

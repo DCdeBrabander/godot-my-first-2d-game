@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://cabvqica8li2p"]
+
+[ext_resource type="Script" path="res://scenes/UI/Minimap/minimap.gd" id="1_6wbja"]
+[ext_resource type="Script" path="res://scenes/UI/Minimap/map.gd" id="2_rp0m7"]
+[ext_resource type="Texture2D" uid="uid://dxy7oleo1ov1g" path="res://art/playerGrey_up1.png" id="3_osu0s"]
+[ext_resource type="Script" path="res://scenes/UI/Minimap/basic_marker.gd" id="4_6dfao"]
+
+[node name="Minimap" type="CanvasLayer"]
+script = ExtResource("1_6wbja")
+
+[node name="MapOverlay" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Map" type="Control" parent="MapOverlay"]
+anchors_preset = 0
+script = ExtResource("2_rp0m7")
+
+[node name="Markers" type="Node2D" parent="MapOverlay/Map"]
+
+[node name="TextureMarker" type="Node2D" parent="MapOverlay/Map/Markers"]
+visible = false
+
+[node name="Sprite2D" type="Sprite2D" parent="MapOverlay/Map/Markers/TextureMarker"]
+texture = ExtResource("3_osu0s")
+
+[node name="BasicMarker" type="Node2D" parent="MapOverlay/Map/Markers"]
+script = ExtResource("4_6dfao")
