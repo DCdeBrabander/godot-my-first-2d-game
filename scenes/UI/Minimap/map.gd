@@ -66,10 +66,13 @@ func add_marker_for_node(reference_node: Node2D, marker_type: MarkerTypes = Mark
 	if (reference_node.has_method("get_minimap_indicator_style")):
 		var marker_style = reference_node.get_minimap_indicator_style()
 		marker.set_color(marker_style.color)
+		if (marker_style.has("animate")):
+			marker.set_animation(marker_style["animate"])
 
 	node_markers[get_reference_key_for_node(reference_node)] = marker
 	add_child(marker)
 
+# very naively always update on each frame
 func update_markers_on_map():
 	for node_path in node_markers.keys():
 		var marker = node_markers[node_path]

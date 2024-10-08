@@ -124,4 +124,5 @@ func get_minimap_indicator_style() -> Dictionary:
 	return {
 		"size": Vector2(10, 10),
 		"color": Color(1, 0, 0),
+		"animate": "pulse"
 	}
