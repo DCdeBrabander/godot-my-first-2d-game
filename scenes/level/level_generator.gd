@@ -2,6 +2,7 @@ extends Node2D
 
 signal seed_update
 
+@onready var enemy_controller = $EnemyController
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
 @onready var room_light_scene = preload("res://scenes/lighting/RoomLight.tscn")
 
@@ -72,20 +73,9 @@ func generate_level():
 	# now add walls on top of fresh floor
 	_generate_walls()
 
+
 func set_background(color: Color):
 	RenderingServer.set_default_clear_color(color)
-
-func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
-	return {
-		"LEFT": 		Vector2(tile.x - 1, 	tile.y		),	# left
-		"TOP_LEFT": 	Vector2(tile.x - 1, 	tile.y - 1	),	# top left
-		"TOP": 			Vector2(tile.x, 		tile.y - 1	), 	# top
-		"TOP_RIGHT":	Vector2(tile.x + 1, 	tile.y - 1	),	# top right
-		"RIGHT": 		Vector2(tile.x + 1, 	tile.y		), 	# right
-		"BOTTOM_RIGHT": Vector2(tile.x + 1, 	tile.y + 1	),	# bottom right
-		"BOTTOM": 		Vector2(tile.x, 		tile.y + 1	),	# bottom
-		"BOTTOM_LEFT": 	Vector2(tile.x - 1, 	tile.y + 1	),	# bottom left
-	}
 
 func _generate_walls():
 	for tile_vector: Vector2 in _generated_level["floor"].keys():
@@ -96,9 +86,12 @@ func _generate_walls():
 			var surrounding_tile_vector = surrounding_tiles[surrounding_tile_key]
 			if (tile_map_layer.get_cell_source_id(surrounding_tile_vector) == -1):
 				missing_tiles[surrounding_tile_key] = surrounding_tile_vector
-				
+		
+		# Supports only a single simple walls, edges and corners, 
+		# since we curently dont support maps that enables single tiles surrounded by 'empty' ones
+		# ----
 		# first check edges: 1 missing tile piece in diagonal position
-		# second, check corners: have 3 missing pieces in both directions
+		# second, check corners: have at least 3 missing connecting pieces (in all directions combined)
 		# Third, check normal walls: Leftovers with 1 directly adjacent tile missing
 		var missing_tile_count = missing_tiles.size()
 		if (missing_tile_count == 1):
@@ -173,14 +166,6 @@ func _generate_floor_tiles():
 	for tile_vector: Vector2 in _generated_level["floor"].keys():
 		_set_tile_at(tile_vector, _generated_level["floor"][tile_vector])
 
-func get_random_spawn_point() -> Vector2:
-	var random_selected_room: Rect2 = _generated_level["rooms"][randi() % _generated_level["rooms"].size()]
-	
-	var random_position_x = randi_range(random_selected_room.position.x + 1, random_selected_room.position.x + random_selected_room.size.x - 1)
-	var random_position_y = randi_range(random_selected_room.position.y + 1, random_selected_room.position.y + random_selected_room.size.y - 1)
-	
-	return Vector2(random_position_x, random_position_y) * tile_size
-
 func _generate_rooms(rooms_left):
 	for i in range(rooms_left):
 		var new_room: Rect2 = _generate_room()
@@ -238,21 +223,41 @@ func _room_intersects(new_room: Rect2) -> bool:
 			break
 	return exists
 	
-func _set_tile_at(vector: Vector2, tile_atlas_coor: Vector2):
+func _set_tile_at(vector: Vector2, tile_atlas_coor: Vector2) -> void:
 	tile_map_layer.set_cell(vector, 0, tile_atlas_coor, 0)
 
-func _add_lighting(room):
+func _add_lighting(room) -> void:
 	var room_center = room.get_center() * tile_size
 	var _new_light = room_light_scene.instantiate()
 	
 	_new_light.position = room_center
 	add_child(_new_light)
 
-func get_current_seed():
+func get_current_seed() -> int:
 	return rng.get_seed()
 	
-func get_level_data():
+func get_level_data() -> Dictionary:
 	return _generated_level
 
-func get_level_size():
+func get_level_size() -> Vector2:
 	return _generated_level["bounding_box"].size
+	
+func get_random_spawn_point() -> Vector2:
+	var random_selected_room: Rect2 = _generated_level["rooms"][randi() % _generated_level["rooms"].size()]
+	
+	var random_position_x = randi_range(random_selected_room.position.x + 1, random_selected_room.position.x + random_selected_room.size.x - 1)
+	var random_position_y = randi_range(random_selected_room.position.y + 1, random_selected_room.position.y + random_selected_room.size.y - 1)
+	
+	return Vector2(random_position_x, random_position_y) * tile_size
+
+func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
+	return {
+		"LEFT": 		Vector2(tile.x - 1, 	tile.y		),	# left
+		"TOP_LEFT": 	Vector2(tile.x - 1, 	tile.y - 1	),	# top left
+		"TOP": 			Vector2(tile.x, 		tile.y - 1	), 	# top
+		"TOP_RIGHT":	Vector2(tile.x + 1, 	tile.y - 1	),	# top right
+		"RIGHT": 		Vector2(tile.x + 1, 	tile.y		), 	# right
+		"BOTTOM_RIGHT": Vector2(tile.x + 1, 	tile.y + 1	),	# bottom right
+		"BOTTOM": 		Vector2(tile.x, 		tile.y + 1	),	# bottom
+		"BOTTOM_LEFT": 	Vector2(tile.x - 1, 	tile.y + 1	),	# bottom left
+	}

@@ -54,14 +54,13 @@ height = 98.0
 cull_mode = 2
 polygon = PackedVector2Array(4, -36, 26, -35, 38, -27, 47, -13, 49, -1, 48, 9, 42, 21, 33, 30, 20, 36, -1, 37, -23, 36, -32, 31, -29, 15, -46, 14, -49, 9, -47, 2, -48, -5, -48, -14, -27, -16, -27, -30, -23, -36)
 
-[node name="Mob" type="RigidBody2D" groups=["mobs"]]
+[node name="BasicMob" type="CharacterBody2D" groups=["mobs"]]
 z_index = 2
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_huyja")
-gravity_scale = 0.0
-contact_monitor = true
-max_contacts_reported = 2
 script = ExtResource("1_65g5i")
+health = null
+score_on_kill = null
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -79,9 +78,10 @@ shape = SubResource("CapsuleShape2D_kllq6")
 modulate = Color(0, 0, 0, 1)
 self_modulate = Color(0, 0, 0, 1)
 clip_children = 2
-skew = 0.00174533
+scale = Vector2(1, 1)
+skew = 0.00174534
 occluder = SubResource("OccluderPolygon2D_d5e2e")
 
-[connection signal="body_entered" from="." to="." method="_on_body_entered"]
-[connection signal="body_shape_entered" from="." to="." method="_on_body_shape_entered"]
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
 [connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_on_visible_on_screen_notifier_2d_screen_exited"]
