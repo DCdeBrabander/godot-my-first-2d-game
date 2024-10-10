@@ -1,11 +1,12 @@
 extends CharacterBody2D
 
+@onready var navigation_agent = $NavigationAgent2D
+
 @export var health: int = 1
 @export var score_on_kill: int = 2
 
-var current_behaviour: Behaviour = Behaviour.FOLLOW
-
-@onready var navigation_agent = $NavigationAgent2D
+var current_behaviour: Behaviour = Behaviour.PATROL
+var patrol_area: Rect2
 
 enum CausesOfDeath {
 	OUT_OF_BOUNDS,
@@ -14,29 +15,54 @@ enum CausesOfDeath {
 
 enum Behaviour {
 	FOLLOW,
-	PATROL
+	PATROL,
+	STOPPED,
 }
+	
+func _process(delta): 
+	match current_behaviour:
+		Behaviour.PATROL: patrol()
+		Behaviour.FOLLOW: follow()
+		_: print("no behaviour")
 
-func setup_navigation(tile_map_layer: TileMapLayer):
-	# Assign the TileMapLayer's navigation map to the NavigationAgent2D
-	var navigation_map = tile_map_layer.navigation_map
-	navigation_agent.navigation_map = navigation_map
+func create(position: Vector2, behaviour: Behaviour = Behaviour.PATROL) -> CharacterBody2D:
+	self.position = position
+	current_behaviour = behaviour
+	return self
+
+func setup_navigation(tile_map_layer: TileMapLayer) -> CharacterBody2D:
+	var navigation_map = tile_map_layer.get_navigation_map()
+	navigation_agent.set_navigation_map(navigation_map)
+	return self
+
+func set_patrol_area(area: Rect2):
+	patrol_area = area
 
 func patrol():
 	if navigation_agent.is_target_reached():
-		# Set a new random patrol point
 		var patrol_target = get_random_patrol_point()
 		navigation_agent.set_target_location(patrol_target)
-
+		print("target reached?")
+		
 	move_towards_target()
 
+func stop():
+	current_behaviour = Behaviour.STOPPED
+	
+func follow():
+	print("?")
+	
 func move_towards_target():
-	var direction = (navigation_agent.get_next_path_position() - global_position).normalized()
-	move_and_slide(direction * 100)  # Example patrol speed
+	velocity = (navigation_agent.get_next_path_position() - position).normalized()
+	
+	print(position, navigation_agent.get_next_path_position() - position, velocity)
+
+	#print("moving in direction: ", direction, navigation_agent.get_next_path_position() )
+	#print(velocity)
+	move_and_slide()
 
 func get_random_patrol_point() -> Vector2:
-	# Generate a random point within a predefined patrol area
-	var patrol_area = Rect2(Vector2(100, 100), Vector2(500, 500))  # Example patrol area
+	print(patrol_area)
 	return patrol_area.position + Vector2(randf() * patrol_area.size.x, randf() * patrol_area.size.y)
 	
 #func initialize(start_position: Vector2):

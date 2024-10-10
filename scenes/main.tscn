@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_l41a4"]
 [ext_resource type="PackedScene" uid="uid://dg1jw6l30ohdk" path="res://scenes/enemies/mob.tscn" id="2_urytg"]
-[ext_resource type="PackedScene" uid="uid://dhbfkic6pbxbe" path="res://scenes/level/LevelGenerator.tscn" id="3_fyfas"]
+[ext_resource type="PackedScene" uid="uid://dhbfkic6pbxbe" path="res://scenes/level/level.tscn" id="3_iqbw0"]
 [ext_resource type="PackedScene" uid="uid://80d5kngkiyry" path="res://scenes/player/player.tscn" id="3_tdnuh"]
 [ext_resource type="PackedScene" uid="uid://baxknly378vrn" path="res://scenes/UI/hud.tscn" id="4_4kipy"]
 [ext_resource type="AudioStream" uid="uid://pmabfccanhxl" path="res://art/gameover.wav" id="5_kx7h1"]
@@ -21,8 +21,7 @@ loop = true
 script = ExtResource("1_l41a4")
 mob_scene = ExtResource("2_urytg")
 
-[node name="LevelGenerator" parent="." instance=ExtResource("3_fyfas")]
-position = Vector2(0, -1)
+[node name="Level" parent="." instance=ExtResource("3_iqbw0")]
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 position = Vector2(0, -1)

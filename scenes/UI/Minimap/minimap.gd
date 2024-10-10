@@ -6,7 +6,7 @@ extends CanvasLayer
 func _ready():
 	map_overlay.visible = false
 
-	var level_size = get_node("../LevelGenerator").get_level_size()
+	var level_size = get_node("../Level/MapGenerator").get_level_size()
 	var map_overlay_size = $MapOverlay.size
 
 	# Calculate the scaling factor based on the ratio of world size to map overlay size

@@ -2,8 +2,7 @@ extends Node2D
 
 signal seed_update
 
-@onready var enemy_controller = $EnemyController
-@onready var tile_map_layer: TileMapLayer = $TileMapLayer
+@onready var tile_map_layer = $TileMapLayer
 @onready var room_light_scene = preload("res://scenes/lighting/RoomLight.tscn")
 
 @export var tile_size: Vector2 = Vector2(64, 64)
@@ -14,6 +13,8 @@ signal seed_update
 @export var max_corridor_width = 7
 @export var max_room_amount: int = 30
 @export var generation_fail_limit = 10
+
+#var _current_tile_map_layer: TileMapLayer
 
 var _generated_level := {
 	"bounding_box": Rect2(0, 0, 0, 0),
@@ -49,28 +50,29 @@ const TILE_SET = {
 }
 
 func _ready():
-	tile_map_layer.position = Vector2(0, 0)
 	rng = RandomNumberGenerator.new()
-	generate_level()
+	tile_map_layer.position = Vector2(0, 0)
 
+	#_current_tile_map_layer = get_node("../TileMapLayer")
+	
 func generate_dark_color():
 	return Color(randf_range(0.0, 0.2), randf_range(0.0, 0.2), randf_range(0.0, 0.2))
-	
+
 func generate_level():
 	rng.randomize()
 	seed_update.emit(rng.seed)
 	tile_map_layer.clear()
 	
 	set_background(generate_dark_color())
-
-	# Random generate some rooms
+#
+	## Random generate some rooms
 	_generate_rooms(max_room_amount)
-	
-	# Map layout
-	# Lay floor tiles for all generated rooms (and corridors)
+	#
+	## Map layout
+	## Lay floor tiles for all generated rooms (and corridors)
 	_generate_floor_tiles()
-	
-	# now add walls on top of fresh floor
+	#
+	## now add walls on top of fresh floor
 	_generate_walls()
 
 
@@ -261,3 +263,15 @@ func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
 		"BOTTOM": 		Vector2(tile.x, 		tile.y + 1	),	# bottom
 		"BOTTOM_LEFT": 	Vector2(tile.x - 1, 	tile.y + 1	),	# bottom left
 	}
+
+func get_area_for_position(position: Vector2):
+	for room: Rect2 in _generated_level["rooms"]:
+		if room.has_point(position):
+			return room
+	
+#func get_tile_map_layer() -> TileMapLayer:
+	#return _current_tile_map_layer
+#
+#func set_tile_map_layer(tile_map_layer: TileMapLayer) -> Node2D:
+	#_current_tile_map_layer = tile_map_layer
+	#return self

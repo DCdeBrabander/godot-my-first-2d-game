@@ -1,8 +1,9 @@
-[gd_scene load_steps=32 format=4 uid="uid://dhbfkic6pbxbe"]
+[gd_scene load_steps=33 format=4 uid="uid://dhbfkic6pbxbe"]
 
-[ext_resource type="Script" path="res://scenes/level/level_generator.gd" id="1_jh6go"]
-[ext_resource type="Texture2D" uid="uid://k7uehj0d00cv" path="res://tileset.png" id="2_6k1r8"]
-[ext_resource type="Script" path="res://scenes/level/enemy_controller.gd" id="3_auprc"]
+[ext_resource type="Script" path="res://scenes/level/level.gd" id="1_t46ye"]
+[ext_resource type="Texture2D" uid="uid://k7uehj0d00cv" path="res://tileset.png" id="2_xus4e"]
+[ext_resource type="Script" path="res://scenes/level/map_generator.gd" id="3_xrfwv"]
+[ext_resource type="Script" path="res://scenes/level/enemy_controller.gd" id="4_dbbvn"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_4v2qp"]
 vertices = PackedVector2Array(32, 1.5, 32, 32, -1.5, 32, 0, 0.5)
@@ -123,7 +124,7 @@ polygon = PackedVector2Array(-32, 32, 1, 32, 0, 1.5, -32, 2)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0h7kh"]
 resource_name = "dikke_tiles"
-texture = ExtResource("2_6k1r8")
+texture = ExtResource("2_xus4e")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 0:0/0/occlusion_layer_0/polygon = SubResource("OccluderPolygon2D_dgjqn")
@@ -263,9 +264,21 @@ physics_layer_0/collision_layer = 1
 navigation_layer_0/layers = 1
 sources/0 = SubResource("TileSetAtlasSource_0h7kh")
 
-[node name="LevelGenerator" type="Node2D"]
+[node name="Level" type="Node2D"]
 z_index = 1
-script = ExtResource("1_jh6go")
+script = ExtResource("1_t46ye")
+
+[node name="MapGenerator" type="Node2D" parent="."]
+script = ExtResource("3_xrfwv")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="MapGenerator" groups=["tiles"]]
+show_behind_parent = true
+z_index = 1
+tile_map_data = PackedByteArray("AAABAAAAAAAAAAAAAAABAAEAAAAGAAAAAAABAAMAAAAGAAAAAAABAAIAAAAGAAAAAAACAAEAAAABAAEAAAACAAIAAAABAAEAAAACAAMAAAABAAEAAAACAAAAAAAEAAAAAAADAAAAAAAEAAAAAAAEAAAAAAAEAAEAAAAFAAAAAAAFAAEAAAAEAP//AAAGAAAAAAAFAP//AAAHAAAAAAAGAAAAAAAEAAAAAAAHAAAAAAAEAAAAAAAIAAAAAAABAAAAAAAIAAEAAAAHAAAAAAAIAAIAAAAHAAAAAAAIAAMAAAAHAAAAAAABAAQAAAACAAAAAAAIAAQAAAADAAAAAAAHAAQAAAAFAAAAAAAGAAQAAAAFAAAAAAAEAAQAAAAFAAAAAAAFAAQAAAAFAAAAAAADAAQAAAAFAAAAAAACAAQAAAAFAAAAAAADAAEAAAABAAEAAAADAAIAAAABAAEAAAADAAMAAAABAAEAAAAEAAEAAAABAAEAAAAEAAIAAAABAAEAAAAEAAMAAAABAAEAAAAFAAEAAAABAAEAAAAFAAIAAAABAAEAAAAFAAMAAAABAAEAAAAGAAEAAAABAAEAAAAGAAIAAAABAAEAAAAGAAMAAAABAAEAAAAHAAEAAAABAAEAAAAHAAIAAAABAAEAAAAHAAMAAAABAAEAAAAEAP7/AAAGAAAAAAAFAP7/AAAHAAAAAAA=")
+tile_set = SubResource("TileSet_b2bn6")
+
+[node name="EnemyController" type="Node2D" parent="."]
+script = ExtResource("4_dbbvn")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 modulate = Color(0, 0, 0, 1)
@@ -285,12 +298,3 @@ visible = false
 follow_viewport_enabled = true
 
 [node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
-
-[node name="TileMapLayer" type="TileMapLayer" parent="." groups=["tiles"]]
-show_behind_parent = true
-z_index = 1
-tile_map_data = PackedByteArray("AAABAAAAAAAAAAAAAAABAAEAAAAGAAAAAAABAAMAAAAGAAAAAAABAAIAAAAGAAAAAAACAAEAAAABAAEAAAACAAIAAAABAAEAAAACAAMAAAABAAEAAAACAAAAAAAEAAAAAAADAAAAAAAEAAAAAAAEAAAAAAAEAAEAAAAFAAAAAAAFAAEAAAAEAP//AAAGAAAAAAAFAP//AAAHAAAAAAAGAAAAAAAEAAAAAAAHAAAAAAAEAAAAAAAIAAAAAAABAAAAAAAIAAEAAAAHAAAAAAAIAAIAAAAHAAAAAAAIAAMAAAAHAAAAAAABAAQAAAACAAAAAAAIAAQAAAADAAAAAAAHAAQAAAAFAAAAAAAGAAQAAAAFAAAAAAAEAAQAAAAFAAAAAAAFAAQAAAAFAAAAAAADAAQAAAAFAAAAAAACAAQAAAAFAAAAAAADAAEAAAABAAEAAAADAAIAAAABAAEAAAADAAMAAAABAAEAAAAEAAEAAAABAAEAAAAEAAIAAAABAAEAAAAEAAMAAAABAAEAAAAFAAEAAAABAAEAAAAFAAIAAAABAAEAAAAFAAMAAAABAAEAAAAGAAEAAAABAAEAAAAGAAIAAAABAAEAAAAGAAMAAAABAAEAAAAHAAEAAAABAAEAAAAHAAIAAAABAAEAAAAHAAMAAAABAAEAAAAEAP7/AAAGAAAAAAAFAP7/AAAHAAAAAAA=")
-tile_set = SubResource("TileSet_b2bn6")
-
-[node name="EnemyController" type="Node2D" parent="."]
-script = ExtResource("3_auprc")

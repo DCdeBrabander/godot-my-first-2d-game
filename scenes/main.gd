@@ -3,7 +3,8 @@ extends Node
 @export var mob_scene: PackedScene
 
 @onready var Player = $Player
-@onready var LevelGenerator = $LevelGenerator
+@onready var Level = $Level
+@onready var LevelGenerator = $Level/MapGenerator
 @onready var MinimapLayer = $Minimap
 @onready var Map = $Minimap/MapOverlay/Map
 
@@ -14,7 +15,12 @@ func _ready():
 	var viewport = get_viewport()
 	viewport_size = viewport.get_visible_rect()
 	
-	Map.set_level_data(LevelGenerator.get_level_data())
+	
+	print("Check")
+	Level.generate_new_level()
+	print("check")
+	Map.set_level_data(Level.get_level())
+	print("check")
 	Map.add_marker_for_node(Player)
 	
 func _process(delta: float):
@@ -26,7 +32,8 @@ func listen_key_events():
 		
 	if Input.is_action_pressed("pause"):
 		is_paused = !is_paused
-		get_tree().paused = is_paused
+		print("Should pause")
+		#get_tree().paused = is_paused
 
 
 # Underneath is mostly updated tutorial structure. 
@@ -48,9 +55,10 @@ func game_over():
 	#$DeathSound.play()
 
 func _on_mob_timer_timeout() -> void:
-	var mob = mob_scene.instantiate() 
-	mob.initialize(LevelGenerator.get_random_spawn_point())
-	add_child(mob)
+	pass
+	#var mob = mob_scene.instantiate() 
+	#mob.initialize(LevelGenerator.get_random_spawn_point())
+	#add_child(mob)
 
 func _on_score_timer_timeout():
 	Global.add_score(1)
