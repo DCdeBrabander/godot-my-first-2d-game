@@ -5,6 +5,7 @@ extends Node2D
 @onready var enemy_controller = $EnemyController
 
 var spawn_points = []
+var level_data = {}
 
 func get_difficulty_settings(difficulty_level = 1):
 	return {
@@ -15,13 +16,13 @@ func get_difficulty_settings(difficulty_level = 1):
 func generate_new_level():
 	var settings = get_difficulty_settings()
 	
-	#map_generator.set_tile_map_layer(tile_map_layer)
-	map_generator.generate_level()
+	# TODO: generate_level currently immediately draws, maybe abstract to seperate drawer
+	# 		Why: able to pre-generate certain seed before actually drawing
+	level_data = map_generator.generate_level()
+	enemy_controller.set_current_tile_map_layer(tile_map_layer)
 	
 	for i in settings["amount_enemies"]:
-		spawn_points.append(map_generator.get_random_spawn_point())
-		
-	enemy_controller.spawn_random_enemy_per_point(tile_map_layer, spawn_points)
-	
+		enemy_controller.spawn_on_point(map_generator.get_random_room_spawn())
+
 func get_level():
-	return map_generator.get_level_data()
+	return level_data

@@ -58,9 +58,9 @@ polygon = PackedVector2Array(4, -36, 26, -35, 38, -27, 47, -13, 49, -1, 48, 9, 4
 z_index = 2
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_huyja")
+motion_mode = 1
 script = ExtResource("1_65g5i")
-health = null
-score_on_kill = null
+speed = 100
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -78,10 +78,12 @@ shape = SubResource("CapsuleShape2D_kllq6")
 modulate = Color(0, 0, 0, 1)
 self_modulate = Color(0, 0, 0, 1)
 clip_children = 2
-scale = Vector2(1, 1)
 skew = 0.00174534
 occluder = SubResource("OccluderPolygon2D_d5e2e")
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+debug_enabled = true
+debug_use_custom = true
+debug_path_custom_color = Color(1, 0, 1, 1)
 
 [connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_on_visible_on_screen_notifier_2d_screen_exited"]

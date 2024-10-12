@@ -4,7 +4,7 @@ extends Node
 
 @onready var Player = $Player
 @onready var Level = $Level
-@onready var LevelGenerator = $Level/MapGenerator
+@onready var MapGenerator = $Level/MapGenerator
 @onready var MinimapLayer = $Minimap
 @onready var Map = $Minimap/MapOverlay/Map
 
@@ -15,12 +15,8 @@ func _ready():
 	var viewport = get_viewport()
 	viewport_size = viewport.get_visible_rect()
 	
-	
-	print("Check")
 	Level.generate_new_level()
-	print("check")
 	Map.set_level_data(Level.get_level())
-	print("check")
 	Map.add_marker_for_node(Player)
 	
 func _process(delta: float):
@@ -41,8 +37,8 @@ func listen_key_events():
 func new_game():
 	Global.set_current_score(0)
 	$HUD.show_highscore(Global.get_high_score()).show_game_message("Get ready")
-	Player.start(LevelGenerator.get_random_spawn_point())
-	$HUD.show_current_seed(str(LevelGenerator.get_current_seed()))
+	Player.start(MapGenerator.get_random_room_spawn())
+	$HUD.show_current_seed(str(MapGenerator.get_current_seed()))
 	$StartTimer.start()
 	#$Music.play()
 
@@ -57,7 +53,7 @@ func game_over():
 func _on_mob_timer_timeout() -> void:
 	pass
 	#var mob = mob_scene.instantiate() 
-	#mob.initialize(LevelGenerator.get_random_spawn_point())
+	#mob.initialize(MapGenerator.get_random_spawn_point())
 	#add_child(mob)
 
 func _on_score_timer_timeout():

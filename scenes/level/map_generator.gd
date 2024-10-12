@@ -1,24 +1,24 @@
 extends Node2D
 
 signal seed_update
+signal level_generated
 
 @onready var tile_map_layer = $TileMapLayer
 @onready var room_light_scene = preload("res://scenes/lighting/RoomLight.tscn")
 
 @export var tile_size: Vector2 = Vector2(64, 64)
-@export var max_level_tiles: Vector2 = Vector2(500, 500)
+@export var max_level_tiles: Vector2 = Vector2(300, 300)
 @export var min_room_size = Vector2(10, 10)
 @export var max_room_size = Vector2(30, 30)
 @export var min_corridor_width = 3
 @export var max_corridor_width = 7
-@export var max_room_amount: int = 30
+@export var max_room_amount: int = 10
 @export var generation_fail_limit = 10
-
-#var _current_tile_map_layer: TileMapLayer
 
 var _generated_level := {
 	"bounding_box": Rect2(0, 0, 0, 0),
 	"rooms": [],
+	"corridors": [],
 	"floor": {},
 	"lights": {},
 	"walls": {}
@@ -52,13 +52,11 @@ const TILE_SET = {
 func _ready():
 	rng = RandomNumberGenerator.new()
 	tile_map_layer.position = Vector2(0, 0)
-
-	#_current_tile_map_layer = get_node("../TileMapLayer")
 	
 func generate_dark_color():
 	return Color(randf_range(0.0, 0.2), randf_range(0.0, 0.2), randf_range(0.0, 0.2))
 
-func generate_level():
+func generate_level() -> Dictionary:
 	rng.randomize()
 	seed_update.emit(rng.seed)
 	tile_map_layer.clear()
@@ -74,7 +72,8 @@ func generate_level():
 	#
 	## now add walls on top of fresh floor
 	_generate_walls()
-
+	Signals.level_generated.emit(_generated_level)
+	return _generated_level
 
 func set_background(color: Color):
 	RenderingServer.set_default_clear_color(color)
@@ -209,12 +208,19 @@ func _add_corridor(start, end, constant, axis):
 	var _corridor_width: int = _allowed_corridor_widths[randi() % _allowed_corridor_widths.size()]
 	var _startPoint: int = min(start, end)
 	var _endPoint: int = max(start, end) + _corridor_width
+	var _generated_corridor: Rect2 = Rect2(0, 0, 0, 0)
 	
 	for t in range(_startPoint, _endPoint):
 		for _extra_width in _corridor_width:
 			match axis:
 				Vector2.AXIS_X: _generated_level["floor"][Vector2(t, constant + _extra_width)] = TILE_SET["FLOOR"]
 				Vector2.AXIS_Y: _generated_level["floor"][Vector2(constant + _extra_width, t)] = TILE_SET["FLOOR"]
+	
+	# add rect2 for corridor to general list
+	if(axis == Vector2.AXIS_X):
+		_generated_level["corridors"].append(Rect2(_startPoint, _startPoint, _endPoint, _endPoint + _corridor_width))
+	if(axis == Vector2.AXIS_Y):
+		_generated_level["corridors"].append(Rect2(_startPoint, _startPoint, _corridor_width, _endPoint + _corridor_width))
 
 func _room_intersects(new_room: Rect2) -> bool:
 	if (_generated_level["rooms"].size() == 0): return false
@@ -244,13 +250,13 @@ func get_level_data() -> Dictionary:
 func get_level_size() -> Vector2:
 	return _generated_level["bounding_box"].size
 	
-func get_random_spawn_point() -> Vector2:
+func get_random_room_spawn() -> Vector2:
 	var random_selected_room: Rect2 = _generated_level["rooms"][randi() % _generated_level["rooms"].size()]
 	
 	var random_position_x = randi_range(random_selected_room.position.x + 1, random_selected_room.position.x + random_selected_room.size.x - 1)
 	var random_position_y = randi_range(random_selected_room.position.y + 1, random_selected_room.position.y + random_selected_room.size.y - 1)
 	
-	return Vector2(random_position_x, random_position_y) * tile_size
+	return Vector2(random_position_x * tile_size.x, random_position_y * tile_size.y)
 
 func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
 	return {
@@ -266,12 +272,12 @@ func get_surrounding_tiles_at(tile: Vector2) -> Dictionary:
 
 func get_area_for_position(position: Vector2):
 	for room: Rect2 in _generated_level["rooms"]:
-		if room.has_point(position):
+		if room.has_point(position / tile_size):
 			return room
+			
+	for corridor: Rect2 in _generated_level["corridors"]:
+		if corridor.has_point(position / tile_size):
+			return corridor
 	
-#func get_tile_map_layer() -> TileMapLayer:
-	#return _current_tile_map_layer
-#
-#func set_tile_map_layer(tile_map_layer: TileMapLayer) -> Node2D:
-	#_current_tile_map_layer = tile_map_layer
-	#return self
+	print("no area found")
+	return false

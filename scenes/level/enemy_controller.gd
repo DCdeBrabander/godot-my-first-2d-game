@@ -1,15 +1,25 @@
 extends Node2D
 
-@onready var enemy_scene = preload("res://scenes/enemies/mob.tscn")
-@onready var tile_map_layer = null
+@onready var basic_enemy = preload("res://scenes/enemies/mob.tscn")
+@onready var tile_map_layer: TileMapLayer = null
 
-func spawn_random_enemy_per_point(tile_map_layer_ref, spawn_points):
-	tile_map_layer = tile_map_layer_ref
+enum EnemyTypes {
+	Basic,
+}
+var enemy_types = {
+	EnemyTypes.Basic: preload("res://scenes/enemies/mob.tscn")
+}
 
-	for spawn_position in spawn_points:
-		var enemy_instance = enemy_scene.instantiate()
-		add_child(enemy_instance)
-		enemy_instance.create(spawn_position).setup_navigation(tile_map_layer)
+func set_current_tile_map_layer(_tile_map_layer: TileMapLayer):
+	tile_map_layer = _tile_map_layer
+
+func spawn_on_point(position: Vector2, type: EnemyTypes = EnemyTypes.Basic):
+	var map_generator = get_node("../MapGenerator")
+	var enemy_instance = basic_enemy.instantiate()
+	enemy_instance.initialize(position)
+	enemy_instance.set_patrol_area(map_generator.get_area_for_position(position))
+	add_child(enemy_instance)
+	enemy_instance.set_navigation_map(tile_map_layer.get_navigation_map())
 
 
 func get_all_enemies():
@@ -18,3 +28,7 @@ func get_all_enemies():
 func stop_all():
 	for child in get_all_enemies():
 		child.stop()
+
+func kill_all():
+	for child in get_all_enemies():
+		child.queue_free()
