@@ -5,10 +5,11 @@ extends CanvasLayer
 
 func _ready():
 	Signals.level_generated.connect(update_map)
+	#Signals.mob_created.connect(map.add_marker_for_node)
 	map_overlay.visible = false
 
-func update_map(level_data):
-	var level_size = level_data["bounding_box"].size #get_node("../Level/MapGenerator").get_level_size()
+func update_map(level_data: Dictionary):
+	var level_size = level_data["bounding_box"].size
 	var map_overlay_size = $MapOverlay.size
 	
 	# Calculate the scaling factor based on the ratio of world size to map overlay size

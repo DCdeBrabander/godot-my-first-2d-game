@@ -17,7 +17,8 @@ func _ready():
 	
 	Level.generate_new_level()
 	Map.set_level_data(Level.get_level())
-	Map.add_marker_for_node(Player)
+	Map.draw_map()
+	Map.add_marker_for_node(Player.get_instance_id())
 	
 func _process(delta: float):
 	listen_key_events()

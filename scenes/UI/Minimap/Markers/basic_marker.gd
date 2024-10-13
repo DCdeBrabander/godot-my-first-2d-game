@@ -7,7 +7,7 @@ var size_tween: Tween
 
 func _ready() -> void:
 	size_tween = get_tree().create_tween().bind_node(self).set_loops().set_trans(Tween.TRANS_SINE)
-	start_animation()
+	if animation_type.length: start_animation()
 	
 func _draw() -> void:
 	draw_circle(Vector2(0, 0), circle_radius, marker_color)
@@ -31,3 +31,6 @@ func stop_animation():
 func _animate_pulse():
 	size_tween.tween_property(self, "circle_radius", 12, 1)
 	size_tween.tween_property(self, "circle_radius", 10, 1)
+
+func _exit_tree() -> void:
+	print("_exit_tree in basic marker")

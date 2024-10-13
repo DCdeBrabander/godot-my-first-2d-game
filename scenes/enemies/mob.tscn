@@ -59,6 +59,7 @@ z_index = 2
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_huyja")
 motion_mode = 1
+platform_on_leave = 2
 script = ExtResource("1_65g5i")
 speed = 100
 metadata/_edit_group_ = true

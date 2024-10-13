@@ -17,9 +17,58 @@ var level_generator: Node
 var level_data
 var world_size
 var map_size
-	
+
 func _process(delta: float) -> void:
 	update_markers_on_map()
+
+func add_marker_for_node(instance_id: int, marker_type: MarkerTypes = MarkerTypes.BASIC):
+	#var reference_node_instance_id = get_reference_key_for_node(reference_node)
+	var marker = null
+	
+	var node = instance_from_id(instance_id)
+	
+	#if not reference_node_instance_id or reference_node_instance_id.length() == 0:
+		#print("INVALID NODE KEY", reference_node_instance_id, reference_node)
+		#return
+	
+	if instance_id in node_markers:
+		return
+	
+	match (marker_type):
+		MarkerTypes.BASIC:
+			marker = BasicMarker.duplicate(15)
+		MarkerTypes.TEXTURE:
+			marker = TextureMarker.duplicate(15)
+		_: 
+			print("Unknown marker type: %s" % marker_type)
+			return
+	
+	if (node.has_method("get_minimap_indicator_style")):
+		var marker_style = node.get_minimap_indicator_style()
+		marker.set_color(marker_style.color)
+		if (marker_style.has("animate")):
+			marker.set_animation(marker_style["animate"])
+	else:
+		marker.set_color(Color(200, 200, 200))
+
+	add_child(marker)
+	node_markers[instance_id] = marker
+
+# very naively always update on each frame
+func update_markers_on_map():
+	for instance_id in node_markers.keys():
+		var marker = node_markers[instance_id]
+		var referenced_node: Node = instance_from_id(instance_id)
+		
+		if not is_instance_valid(referenced_node):
+			print("Not valid node")
+			continue
+
+		# Calculate the marker's position scaled to the minimap
+		var normalized_x = (referenced_node.position.x * map_scale)
+		var normalized_y = (referenced_node.position.y * map_scale)
+		
+		marker.position = Vector2(normalized_x, normalized_y)
 
 # Draws the generated level on the minimap
 func draw_map():
@@ -47,52 +96,16 @@ func draw_map():
 			room_tile.position = room_rect.position * map_scale * 64 # abstract / normalize tile_size (64
 			room_tile.color = Color(1, 1, 1)
 			add_child(room_tile)
-		
-func add_marker_for_node(reference_node: Node2D, marker_type: MarkerTypes = MarkerTypes.BASIC):
-	if not reference_node or get_reference_key_for_node(reference_node) in node_markers:
-		return
-	
-	var marker = null
-	
-	match (marker_type):
-		MarkerTypes.BASIC: 
-			marker = BasicMarker.duplicate()
-		MarkerTypes.TEXTURE: 
-			marker = TextureMarker.duplicate()
-		_: 
-			print("Unknown marker type: %s" % marker_type)
-			return
-	
-	if (reference_node.has_method("get_minimap_indicator_style")):
-		var marker_style = reference_node.get_minimap_indicator_style()
-		marker.set_color(marker_style.color)
-		if (marker_style.has("animate")):
-			marker.set_animation(marker_style["animate"])
-
-	node_markers[get_reference_key_for_node(reference_node)] = marker
-	add_child(marker)
-
-# very naively always update on each frame
-func update_markers_on_map():
-	for node_path in node_markers.keys():
-		var marker = node_markers[node_path]
-		var referenced_node: Node = get_node(node_path)
-				
-		if referenced_node:
-			# Calculate the marker's position scaled to the minimap
-			var normalized_x = (referenced_node.position.x * map_scale)
-			var normalized_y = (referenced_node.position.y * map_scale)
-			marker.position = Vector2(normalized_x, normalized_y)
 
 func remove_reference(reference_node: Node):
 	var reference_key = get_reference_key_for_node(reference_node)
 	if reference_key in node_markers:
 		var indicator = node_markers[reference_key]
 		indicator.queue_free()
-		node_markers.erase(reference_key)
+		#node_markers.erase(reference_key)
 
-func get_reference_key_for_node(reference_node: Node) -> String:
-	return reference_node.get_path()
+func get_reference_key_for_node(reference_node: Node) -> int:
+	return reference_node.get_instance_id() #reference_node.get_path()
 
 func set_world_size(_world_size):
 	world_size = _world_size
@@ -105,4 +118,3 @@ func set_map_scale(scale: float):
 	
 func set_level_data(_data):
 	level_data = _data
-	draw_map()

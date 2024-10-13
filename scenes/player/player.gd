@@ -4,7 +4,7 @@ extends CharacterBody2D
 @export var bullet_cooldown = 0.25
 @export var bullet: PackedScene
 
-@onready var fov_light := $FieldOfViewLight
+#@onready var fov_light := $FieldOfViewLight
 
 signal hit
 
