@@ -17,7 +17,7 @@ sampling_rate = 44100.0
 packet_sequence = SubResource("OggPacketSequence_ojppf")
 loop = true
 
-[node name="Main" type="Node"]
+[node name="Game" type="Node"]
 script = ExtResource("1_l41a4")
 mob_scene = ExtResource("2_urytg")
 
@@ -43,9 +43,6 @@ position = Vector2(720, 450)
 
 [node name="Minimap" parent="." instance=ExtResource("6_6262c")]
 
-[node name="MobTimer" type="Timer" parent="."]
-wait_time = 1.996
-
 [node name="ScoreTimer" type="Timer" parent="."]
 
 [node name="StartTimer" type="Timer" parent="."]
@@ -62,6 +59,5 @@ volume_db = 4.742
 
 [connection signal="hit" from="Player" to="." method="game_over"]
 [connection signal="start_game" from="HUD" to="." method="new_game"]
-[connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
 [connection signal="timeout" from="ScoreTimer" to="." method="_on_score_timer_timeout"]
 [connection signal="timeout" from="StartTimer" to="." method="_on_start_timer_timeout"]

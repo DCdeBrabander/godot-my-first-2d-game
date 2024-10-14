@@ -6,8 +6,10 @@ var movement_delta: float
 @export var movement_speed: float = 40000.0
 @export var health: int = 1
 @export var score_on_kill: int = 2
+@export var visibility_distance = 1000
 
 var current_behaviour: Behaviour = Behaviour.PATROL
+var current_follow_target: Node
 var patrol_area: Rect2
 
 enum CausesOfDeath {
@@ -32,6 +34,9 @@ func _ready() -> void:
 	Signals.mob_created.emit(self.get_instance_id())
 
 func _physics_process(delta: float): 
+	
+	update_behaviour()
+	
 	match current_behaviour:
 		Behaviour.PATROL: patrol()
 		Behaviour.FOLLOW: follow()
@@ -42,6 +47,55 @@ func initialize(position: Vector2, behaviour: Behaviour = Behaviour.PATROL) -> C
 	current_behaviour = behaviour
 	return self
 
+# Debug / TODO Replace for actual light source (like player)
+func _draw():
+	# Convert FOV angle to radians
+	var fov_angle = 60 * PI / 180
+	var fov_radius = visibility_distance
+	var fov_color = Color(1, 1, 0, 0.1)  # Semi-transparent yellow color
+
+	# Calculate the left and right directions of the cone
+	var direction_left = Vector2(cos(rotation - fov_angle / 2), sin(rotation - fov_angle / 2))
+	var direction_right = Vector2(cos(rotation + fov_angle / 2), sin(rotation + fov_angle / 2))
+
+	var cone_polygon_points = [
+		Vector2(),  # The mob's position (origin of the cone)
+		direction_left * fov_radius,  # The left edge of the cone
+		direction_right * fov_radius  # The right edge of the cone
+	]
+
+	# Draw the filled cone (polygon) as a triangle
+	draw_polygon(cone_polygon_points, [fov_color])
+
+func update_behaviour():
+	for player in get_tree().get_nodes_in_group("players"):
+		if is_in_view(player):
+			current_behaviour = Behaviour.FOLLOW
+			current_follow_target = player
+		else:
+			if (current_behaviour != Behaviour.PATROL):
+				current_behaviour = Behaviour.PATROL
+
+# check distance and in FOV
+func is_in_view(node: Node2D) -> bool:
+	if (global_position - node.global_position).length_squared() > visibility_distance * visibility_distance:
+		return false
+	
+	var direction_to_player = (node.global_position - global_position).normalized()
+	
+	# Mob's facing direction (based on its rotation)
+	var mob_facing_direction = Vector2(cos(rotation), sin(rotation)).normalized()
+	
+	# Dot product to check if the player is within the FOV cone
+	var dot_product = mob_facing_direction.dot(direction_to_player)
+
+	# Check the FOV angle (cosine of half the FOV angle)
+	var fov_angle = 60 * PI / 180  # Convert degrees to radians
+	var fov_cosine = cos(fov_angle / 2)
+
+	# Return true if the player is within FOV
+	return dot_product >= fov_cosine
+	
 func patrol():
 	if patrol_area == null:
 		print("Patrol area not set for enemy...")
@@ -59,7 +113,7 @@ func patrol():
 	
 	var new_velocity: Vector2 = global_position.direction_to(navigation_agent.get_next_path_position()) * movement_delta
 	navigation_agent.set_velocity(new_velocity)
-	rotation = global_position.direction_to(navigation_agent.get_next_path_position()).angle()
+	_lerp_rotation(global_position.direction_to(navigation_agent.get_next_path_position()).angle())
 
 func _on_velocity_computed(safe_velocity: Vector2) -> void:
 	velocity = safe_velocity
@@ -71,7 +125,20 @@ func stop():
 	return self
 	
 func follow():
-	print("?")
+	if current_follow_target == null:
+		return
+		
+	navigation_agent.set_target_position(current_follow_target.global_position)
+
+	# Check if the target is reachable or the mob has reached the player
+	if navigation_agent.is_target_reachable() and not navigation_agent.is_navigation_finished():
+		movement_delta = movement_speed * get_process_delta_time()
+		var new_velocity: Vector2 = global_position.direction_to(navigation_agent.get_next_path_position()) * movement_delta
+		navigation_agent.set_velocity(new_velocity)
+		_lerp_rotation(global_position.direction_to(navigation_agent.get_next_path_position()).angle())
+	else:
+		# Handle unreachable target or if the target has been reached
+		navigation_agent.set_velocity(Vector2.ZERO)
 
 func hit(incoming_damage: int):
 	print("HIT")
@@ -107,4 +174,6 @@ func get_random_patrol_point(padding: float = 2.0) -> Vector2:
 		randf_range(clamped_min.x, clamped_max.x),
 		randf_range(clamped_min.y, clamped_max.y)
 	)
-	
+
+func _lerp_rotation(to_rotation: float, smoothing_scale: float = 0.1) -> void:
+	rotation = lerp_angle(rotation, to_rotation, smoothing_scale)
