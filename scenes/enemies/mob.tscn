@@ -61,7 +61,6 @@ material = SubResource("CanvasItemMaterial_huyja")
 motion_mode = 1
 platform_on_leave = 2
 script = ExtResource("1_65g5i")
-speed = 100
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -83,6 +82,13 @@ skew = 0.00174534
 occluder = SubResource("OccluderPolygon2D_d5e2e")
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+path_desired_distance = 40.0
+target_desired_distance = 20.0
+path_max_distance = 10.0
+simplify_path = true
+avoidance_enabled = true
+radius = 21.76
+max_speed = 1000.0
 debug_enabled = true
 debug_use_custom = true
 debug_path_custom_color = Color(1, 0, 1, 1)
