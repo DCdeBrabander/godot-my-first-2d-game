@@ -58,6 +58,7 @@ polygon = PackedVector2Array(4, -36, 26, -35, 38, -27, 47, -13, 49, -1, 48, 9, 4
 z_index = 2
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_huyja")
+collision_layer = 2
 motion_mode = 1
 platform_on_leave = 2
 script = ExtResource("1_65g5i")
@@ -89,7 +90,6 @@ simplify_path = true
 avoidance_enabled = true
 radius = 21.76
 max_speed = 1000.0
-debug_enabled = true
 debug_use_custom = true
 debug_path_custom_color = Color(1, 0, 1, 1)
 
