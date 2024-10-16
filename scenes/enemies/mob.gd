@@ -2,15 +2,24 @@ extends CharacterBody2D
 
 @onready var navigation_agent = $NavigationAgent2D
 
-var movement_delta: float
 @export var movement_speed: float = 40000.0
-@export var health: int = 1
+@export var health: int = 2
 @export var score_on_kill: int = 2
 @export var visibility_distance = 1000
+@export var look_around_duration = 5.0
 
 var current_behaviour: Behaviour = Behaviour.PATROL
-var current_follow_target: Node
+var previous_behaviour: Behaviour
+
+var movement_delta: float
 var patrol_area: Rect2
+var current_follow_target: Node
+var look_around_timeout_left = 0.0
+var follow_last_known_position = Vector2.ZERO
+
+var world_space_state: PhysicsDirectSpaceState2D
+
+const DELTA_EPSILON = 0.01
 
 enum CausesOfDeath {
 	OUT_OF_BOUNDS,
@@ -21,6 +30,7 @@ enum Behaviour {
 	FOLLOW,
 	PATROL,
 	STOPPED,
+	LOOK_AROUND,
 }
 
 func _exit_tree() -> void:
@@ -31,16 +41,17 @@ func _ready() -> void:
 	$AnimatedSprite2D.play(mob_types[randi() % mob_types.size()])
 	
 	navigation_agent.velocity_computed.connect(Callable(_on_velocity_computed))
+	world_space_state = get_world_2d().direct_space_state
 	Signals.mob_created.emit(self.get_instance_id())
 
 func _physics_process(delta: float): 
-	
-	update_behaviour()
+	update_behaviour(delta)
 	
 	match current_behaviour:
 		Behaviour.PATROL: patrol()
 		Behaviour.FOLLOW: follow()
-		_: print("no behaviour")	
+		Behaviour.LOOK_AROUND: look_around()
+		_: print("no behaviour")
 
 func initialize(position: Vector2, behaviour: Behaviour = Behaviour.PATROL) -> CharacterBody2D:
 	self.position = position
@@ -67,47 +78,47 @@ func _draw():
 	# Draw the filled cone (polygon) as a triangle
 	draw_polygon(cone_polygon_points, [fov_color])
 
-func update_behaviour():
+func update_behaviour(delta: float):
+	var player_in_view
+	current_follow_target = null
+	
 	for player in get_tree().get_nodes_in_group("players"):
 		if is_in_view(player):
+			previous_behaviour = current_behaviour
 			current_behaviour = Behaviour.FOLLOW
 			current_follow_target = player
-		else:
-			if (current_behaviour != Behaviour.PATROL):
+			break
+	
+	if not current_follow_target:
+		# we were following something, let's start looking around
+		if current_behaviour == Behaviour.FOLLOW:
+			current_behaviour = Behaviour.LOOK_AROUND
+			look_around_timeout_left = look_around_duration
+			
+		
+		# Lets look around for a bit before going back
+		elif current_behaviour == Behaviour.LOOK_AROUND:
+			look_around_timeout_left -= delta
+			if look_around_timeout_left <= DELTA_EPSILON:
 				current_behaviour = Behaviour.PATROL
+		
+		# Fall back to default behaviour, which is patrolling
+		elif (current_behaviour != Behaviour.PATROL):
+			current_behaviour = Behaviour.PATROL
 
-# check distance and in FOV
-func is_in_view(node: Node2D) -> bool:
-	if (global_position - node.global_position).length_squared() > visibility_distance * visibility_distance:
-		return false
-	
-	var direction_to_player = (node.global_position - global_position).normalized()
-	
-	# Mob's facing direction (based on its rotation)
-	var mob_facing_direction = Vector2(cos(rotation), sin(rotation)).normalized()
-	
-	# Dot product to check if the player is within the FOV cone
-	var dot_product = mob_facing_direction.dot(direction_to_player)
+	if previous_behaviour != current_behaviour:
+		previous_behaviour = current_behaviour
 
-	# Check the FOV angle (cosine of half the FOV angle)
-	var fov_angle = 60 * PI / 180  # Convert degrees to radians
-	var fov_cosine = cos(fov_angle / 2)
-
-	# Return true if the player is within FOV
-	return dot_product >= fov_cosine
-	
 func patrol():
 	if patrol_area == null:
 		print("Patrol area not set for enemy...")
 		return
 	
 	if navigation_agent.is_navigation_finished() or velocity.is_zero_approx():
-		var patrol_point = get_random_patrol_point() * 64
-		navigation_agent.set_target_position(patrol_point)
+		navigation_agent.set_target_position(get_random_patrol_point() * 64)
 
 	if not navigation_agent.is_target_reachable() or navigation_agent.is_target_reached():
-		var patrol_point = get_random_patrol_point() * 64
-		navigation_agent.set_target_position(patrol_point)
+		navigation_agent.set_target_position(get_random_patrol_point() * 64)
 
 	movement_delta = movement_speed * get_process_delta_time()
 	
@@ -115,9 +126,19 @@ func patrol():
 	navigation_agent.set_velocity(new_velocity)
 	_lerp_rotation(global_position.direction_to(navigation_agent.get_next_path_position()).angle())
 
-func _on_velocity_computed(safe_velocity: Vector2) -> void:
-	velocity = safe_velocity
-	move_and_slide()
+func look_around():
+	if follow_last_known_position:
+		navigation_agent.set_target_position(follow_last_known_position)
+		_lerp_rotation(global_position.direction_to(follow_last_known_position).angle())
+		follow_last_known_position = null
+		return
+	
+	# if mob is at last known position of node it followed, start looking around
+	# face different direction every whole second
+	# needs some work.. (it still constantly runs)
+	if navigation_agent.is_navigation_finished():
+		if int(look_around_timeout_left) == snapped(look_around_timeout_left, 0.5):
+			_lerp_rotation(randf_range(-PI, PI))
 
 func stop():
 	current_behaviour = Behaviour.STOPPED
@@ -127,7 +148,8 @@ func stop():
 func follow():
 	if current_follow_target == null:
 		return
-		
+	
+	follow_last_known_position = current_follow_target.global_position
 	navigation_agent.set_target_position(current_follow_target.global_position)
 
 	# Check if the target is reachable or the mob has reached the player
@@ -141,7 +163,6 @@ func follow():
 		navigation_agent.set_velocity(Vector2.ZERO)
 
 func hit(incoming_damage: int):
-	print("HIT")
 	health -= incoming_damage
 	if (health <= 0): die(CausesOfDeath.KILLED)
 	
@@ -175,5 +196,29 @@ func get_random_patrol_point(padding: float = 2.0) -> Vector2:
 		randf_range(clamped_min.y, clamped_max.y)
 	)
 
-func _lerp_rotation(to_rotation: float, smoothing_scale: float = 0.1) -> void:
-	rotation = lerp_angle(rotation, to_rotation, smoothing_scale)
+# check distance and in FOV
+func is_in_view(node: Node2D) -> bool:
+	if (global_position - node.global_position).length_squared() > visibility_distance * visibility_distance:
+		return false
+	
+	# Raycast to check if there are any obstacles between the mob and the player
+	var ray_length = (node.global_position - global_position).length()  # Length of the ray
+	var result = world_space_state.intersect_ray(PhysicsRayQueryParameters2D.create(global_position, node.global_position))
+	
+	var direction_to_player = (node.global_position - global_position).normalized()
+	var mob_facing_direction = Vector2(cos(rotation), sin(rotation)).normalized()
+	# Dot product to check if the player is within the FOV cone
+	var dot_product = mob_facing_direction.dot(direction_to_player)
+	# Check the FOV angle (cosine of half the FOV angle)
+	var fov_angle = 60 * PI / 180  # Convert degrees to radians
+	var fov_cosine = cos(fov_angle / 2)
+
+	# Return true if the player is within FOV and if ray hit the node (like Player)
+	return dot_product >= fov_cosine and (result and result.collider == node)
+
+func _lerp_rotation(to_rotation: float, smoothing_scale: float = 0.3) -> void:
+	rotation = lerp_angle(rotation, to_rotation, smoothstep(0.0, 1.0, smoothing_scale))
+
+func _on_velocity_computed(safe_velocity: Vector2) -> void:
+	velocity = safe_velocity
+	move_and_slide()
