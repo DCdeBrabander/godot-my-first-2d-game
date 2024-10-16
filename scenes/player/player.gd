@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
-@export var speed = 800
-@export var bullet_cooldown = 0.25
+@export var default_speed: int = 800
+@export var bullet_cooldown: float = 0.25
 @export var bullet: PackedScene
 
 @onready var player_animation = $AnimatedSprite2D
@@ -17,7 +17,9 @@ var _current_delta: float
 var screen_size
 
 # Player stuffs
+var is_slow_walking = false
 var can_shoot = true
+var current_speed: int
 var bullet_direction = Vector2(1, 0)
 var last_player_direction = Vector2.ZERO
 var current_player_state = PlayerStates.DEAD
@@ -36,6 +38,7 @@ const COOLDOWN_THRESHOLD = 0.01
 
 func _ready() -> void:
 	screen_size = get_viewport_rect().size
+	current_speed = default_speed
 	hide()
 	
 func start(_position: Vector2):
@@ -68,6 +71,9 @@ func _process(delta: float) -> void:
 	set_animation(view_direction)
 
 func handle_actions_from_input():
+	if Input.is_action_pressed("slow_walk"): set_slow_walk(true)
+	else: set_slow_walk(false)
+	
 	if Input.is_action_just_pressed("flashlight"): toggle_flashlight()
 	if Input.is_action_just_pressed("dash"): start_dash()
 	if Input.is_action_pressed("fire"): shoot()
@@ -76,11 +82,10 @@ func move_player():
 	var current_player_direction: Vector2 = get_move_direction()
 	var player_velocity: Vector2 = Vector2.ZERO
 	
+	# refactor logic so it can use same bottom move_and_collide and speed (like is_slow_walking)
 	if is_dashing:
-		# Dash in the set direction
-		print("DASHING", dash_time_remaining)
-		
-		player_velocity = dash_direction.normalized() * dash_speed
+		# Dash in the set direction		
+		player_velocity = current_player_direction.normalized() * dash_speed
 		dash_time_remaining -= _current_delta
 	
 		# If dash time runs out, stop dashing
@@ -89,9 +94,14 @@ func move_player():
 			
 		move_and_collide(player_velocity * _current_delta)
 		return
+	
+	if is_slow_walking:
+		current_speed = default_speed / 2
+	else: 
+		current_speed = default_speed
 
 	if current_player_direction.length() > 0:
-		player_velocity = current_player_direction.normalized() * speed
+		player_velocity = current_player_direction.normalized() * current_speed
 		move_and_collide(player_velocity * _current_delta)
 		Global.update_player_position(self.position)
 		player_animation.play()
@@ -106,8 +116,10 @@ func start_dash():
 		is_dashing = true
 		dash_time_remaining = dash_duration
 		dash_cooldown_remaining = dash_cooldown
-		dash_direction = get_move_direction()
-
+		
+func set_slow_walk(is_slow: bool):
+	is_slow_walking = is_slow
+	
 func toggle_flashlight():
 	flashlight_enabled = ! flashlight_enabled
 	$FieldOfView.enabled = flashlight_enabled
