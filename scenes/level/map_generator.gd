@@ -6,6 +6,7 @@ signal level_generated
 @onready var tile_map_layer = $TileMapLayer
 @onready var room_light_scene = preload("res://scenes/lighting/RoomLight.tscn")
 
+# Unit: Tile-size (of 64px)
 @export var tile_size: Vector2 = Vector2(64, 64)
 @export var max_level_tiles: Vector2 = Vector2(300, 300)
 @export var min_room_size = Vector2(10, 10)
@@ -21,9 +22,12 @@ var _generated_level := {
 	"corridors": [],
 	"floor": {},
 	"lights": {},
-	"walls": {}
+	"walls": {},
+	"entry": Rect2(0, 0, 0, 0),
+	"exit": Rect2(0, 0, 0, 0)
 }
 
+# move to global?
 var rng: RandomNumberGenerator
 
 const TILE_SET = {
@@ -47,6 +51,10 @@ const TILE_SET = {
 	"WALL_EDGE_TOP_RIGHT": Vector2(5, 1),
 	"WALL_EDGE_BOTTOM_RIGHT": Vector2(6, 1),
 	"WALL_EDGE_BOTTOM_LEFT": Vector2(7, 1),
+	
+	# entry / exit
+	"ENTRY": Vector2(2, 1),
+	"EXIT": Vector2(3, 1),
 }
 
 func _ready():
@@ -63,15 +71,20 @@ func generate_level() -> Dictionary:
 	
 	set_background(generate_dark_color())
 #
-	## Random generate some rooms
+	# Random generate some rooms (and corridors)
 	_generate_rooms(max_room_amount)
-	#
-	## Map layout
-	## Lay floor tiles for all generated rooms (and corridors)
+	
+	# Map layout
+	# Lay floor tiles for all generated rooms (and corridors)
 	_generate_floor_tiles()
-	#
-	## now add walls on top of fresh floor
+	
+	# now add walls on top of fresh floor
 	_generate_walls()
+	
+	# We have to start and end somewhere 
+	add_entry()
+	add_exit()
+	
 	Signals.level_generated.emit(_generated_level)
 	return _generated_level
 
@@ -93,7 +106,7 @@ func _generate_walls():
 		# ----
 		# first check edges: 1 missing tile piece in diagonal position
 		# second, check corners: have at least 3 missing connecting pieces (in all directions combined)
-		# Third, check normal walls: Leftovers with 1 directly adjacent tile missing
+		# Third, check normal walls: Mostly leftovers with 1 directly adjacent tile missing
 		var missing_tile_count = missing_tiles.size()
 		if (missing_tile_count == 1):
 			_add_edge_wall_at(tile_vector, missing_tiles)
@@ -222,6 +235,37 @@ func _add_corridor(start, end, constant, axis):
 	if(axis == Vector2.AXIS_Y):
 		_generated_level["corridors"].append(Rect2(_startPoint, _startPoint, _corridor_width, _endPoint + _corridor_width))
 
+func _add_lighting(room) -> void:
+	var room_center = room.get_center() * tile_size
+	var _new_light = room_light_scene.instantiate()
+	
+	_new_light.position = room_center
+	add_child(_new_light)
+
+func add_exit():
+	var random_room = get_random_room()
+	if ! random_room:
+		print("Sir, there is no room for an exit...?")
+		return
+	
+	# for now naively try again
+	if random_room.position == _generated_level["entry_room"].position:
+		print("cannot have exit in same room as where we started, whats the fun in that? lets try again")
+		add_exit()
+	
+	_generated_level["exit_room"] = random_room
+	_set_tile_at(random_room.get_center(), TILE_SET.EXIT)
+		
+
+func add_entry():
+	var random_room = get_random_room()
+	if ! random_room:
+		print("Sir, there is no room for to start our adventure...?")
+		return
+	
+	_generated_level["entry_room"] = random_room
+	_set_tile_at(random_room.get_center(), TILE_SET.ENTRY)
+	
 func _room_intersects(new_room: Rect2) -> bool:
 	if (_generated_level["rooms"].size() == 0): return false
 	var exists := false
@@ -234,13 +278,7 @@ func _room_intersects(new_room: Rect2) -> bool:
 func _set_tile_at(vector: Vector2, tile_atlas_coor: Vector2) -> void:
 	tile_map_layer.set_cell(vector, 0, tile_atlas_coor, 0)
 
-func _add_lighting(room) -> void:
-	var room_center = room.get_center() * tile_size
-	var _new_light = room_light_scene.instantiate()
-	
-	_new_light.position = room_center
-	add_child(_new_light)
-
+# move to global?
 func get_current_seed() -> int:
 	return rng.get_seed()
 	
@@ -249,10 +287,22 @@ func get_level_data() -> Dictionary:
 
 func get_level_size() -> Vector2:
 	return _generated_level["bounding_box"].size
-	
+
+# TODO exclude specific rooms? (like entry and exit)
+func get_random_room():
+	if ! _generated_level["rooms"].size():
+		print("unable to get random room")
+		return false
+
+	return _generated_level["rooms"][randi() % _generated_level["rooms"].size()]
+
+# TODO exlcude entry/exit
 func get_random_room_spawn() -> Vector2:
-	var random_selected_room: Rect2 = _generated_level["rooms"][randi() % _generated_level["rooms"].size()]
+	var random_selected_room = get_random_room()
 	
+	if ! random_selected_room:
+		return Vector2.ZERO
+		
 	var random_position_x = randi_range(random_selected_room.position.x + 1, random_selected_room.position.x + random_selected_room.size.x - 1)
 	var random_position_y = randi_range(random_selected_room.position.y + 1, random_selected_room.position.y + random_selected_room.size.y - 1)
 	
@@ -281,3 +331,6 @@ func get_area_for_position(position: Vector2):
 	
 	print("no area found")
 	return false
+
+func get_tile_size() -> Vector2: 
+	return tile_size

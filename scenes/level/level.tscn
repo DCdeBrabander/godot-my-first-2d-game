@@ -199,6 +199,7 @@ texture_region_size = Vector2i(64, 64)
 7:1/0 = 0
 7:1/0/occlusion_layer_0/polygon = SubResource("OccluderPolygon2D_rqkiq")
 7:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, 0, 1, 0, 1, 32, -32, 32)
+2:1/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_b2bn6"]
 tile_size = Vector2i(64, 64)

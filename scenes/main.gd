@@ -32,13 +32,11 @@ func listen_key_events():
 		print("Should pause")
 		#get_tree().paused = is_paused
 
-# Underneath is mostly updated tutorial structure. 
-# likely we want to replace/move/remove it later.
 func new_game():
 	Global.set_current_score(0)
 	$HUD.show_highscore(Global.get_high_score()).show_game_message("Get ready")
-	Player.start(MapGenerator.get_random_room_spawn())
-	$HUD.show_current_seed(str(MapGenerator.get_current_seed()))
+	Player.start(Level.get_entry_position())
+	$HUD.show_current_seed(Level.get_seed())
 	$StartTimer.start()
 	#$Music.play()
 
