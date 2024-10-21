@@ -1,6 +1,5 @@
 extends Node2D
 
-signal seed_update
 signal level_generated
 
 @onready var tile_map_layer = $TileMapLayer
@@ -16,6 +15,8 @@ signal level_generated
 @export var max_room_amount: int = 10
 @export var generation_fail_limit = 10
 
+var rng
+
 var _generated_level := {
 	"bounding_box": Rect2(0, 0, 0, 0),
 	"rooms": [],
@@ -26,9 +27,6 @@ var _generated_level := {
 	"entry": Rect2(0, 0, 0, 0),
 	"exit": Rect2(0, 0, 0, 0)
 }
-
-# move to global?
-var rng: RandomNumberGenerator
 
 const TILE_SET = {
 	"WALL_BLOCK": Vector2(0, 1),
@@ -58,38 +56,23 @@ const TILE_SET = {
 }
 
 func _ready():
-	rng = RandomNumberGenerator.new()
 	tile_map_layer.position = Vector2(0, 0)
-	
-func generate_dark_color():
-	return Color(randf_range(0.0, 0.2), randf_range(0.0, 0.2), randf_range(0.0, 0.2))
 
-func generate_level() -> Dictionary:
-	rng.randomize()
-	seed_update.emit(rng.seed)
-	tile_map_layer.clear()
+func generate_level(_rng) -> Dictionary:
+	rng = _rng
 	
-	set_background(generate_dark_color())
-#
 	# Random generate some rooms (and corridors)
 	_generate_rooms(max_room_amount)
-	
-	# Map layout
-	# Lay floor tiles for all generated rooms (and corridors)
-	_generate_floor_tiles()
 	
 	# now add walls on top of fresh floor
 	_generate_walls()
 	
 	# We have to start and end somewhere 
-	add_entry()
-	add_exit()
+	_add_entry()
+	_add_exit()
 	
 	Signals.level_generated.emit(_generated_level)
 	return _generated_level
-
-func set_background(color: Color):
-	RenderingServer.set_default_clear_color(color)
 
 func _generate_walls():
 	for tile_vector: Vector2 in _generated_level["floor"].keys():
@@ -98,7 +81,8 @@ func _generate_walls():
 		
 		for surrounding_tile_key in surrounding_tiles.keys():
 			var surrounding_tile_vector = surrounding_tiles[surrounding_tile_key]
-			if (tile_map_layer.get_cell_source_id(surrounding_tile_vector) == -1):
+			
+			if not _generated_level["floor"].has(surrounding_tile_vector):
 				missing_tiles[surrounding_tile_key] = surrounding_tile_vector
 		
 		# Supports only a single simple walls, edges and corners, 
@@ -112,7 +96,7 @@ func _generate_walls():
 			_add_edge_wall_at(tile_vector, missing_tiles)
 			_add_simple_wall_at(tile_vector, missing_tiles)
 			continue
-		
+		#
 		_add_simple_wall_at(tile_vector, missing_tiles)
 		_add_corner_wall_at(tile_vector, missing_tiles)
 
@@ -130,8 +114,7 @@ func _add_simple_wall_at(vector: Vector2, surrounding_vectors_without_tiles: Dic
 	
 	if (tile_type != "UNKNOWN"):
 		_generated_level["walls"][vector] = tile_type
-		_generated_level["floor"].erase(vector)
-		_set_tile_at(vector, TILE_SET[tile_type])
+		#_generated_level["floor"].erase(vector)
 		return true
 
 	return false
@@ -150,8 +133,7 @@ func _add_edge_wall_at(vector: Vector2, surrounding_vectors_without_tiles: Dicti
 	
 	if (tile_type != "UNKNOWN"):
 		_generated_level["walls"][vector] = tile_type
-		_generated_level["floor"].erase(vector)
-		_set_tile_at(vector, TILE_SET[tile_type])
+		#_generated_level["floor"].erase(vector)
 		return true
 
 	return false
@@ -170,15 +152,10 @@ func _add_corner_wall_at(vector: Vector2, surrounding_vectors_without_tiles: Dic
 	
 	if (tile_type != "UNKNOWN"):
 		_generated_level["walls"][vector] = tile_type
-		_generated_level["floor"].erase(vector)
-		_set_tile_at(vector, TILE_SET[tile_type])
+		#_generated_level["floor"].erase(vector)
 		return true
 
 	return false
-		
-func _generate_floor_tiles():
-	for tile_vector: Vector2 in _generated_level["floor"].keys():
-		_set_tile_at(tile_vector, _generated_level["floor"][tile_vector])
 
 func _generate_rooms(rooms_left):
 	for i in range(rooms_left):
@@ -210,12 +187,6 @@ func _generate_hallway(roomA: Rect2, roomB: Rect2):
 		_add_corridor(centerB.y, centerA.y, centerB.x, Vector2.AXIS_Y)
 		_add_corridor(centerB.x, centerA.x, centerA.y, Vector2.AXIS_X)
 
-func _add_room(room):
-	_generated_level["rooms"].append(room)
-	for x in range(room.position.x, room.end.x):
-		for y in range(room.position.y, room.end.y):
-			_generated_level["floor"][Vector2(x, y)] = TILE_SET["FLOOR"]
-	
 func _add_corridor(start, end, constant, axis):
 	var _allowed_corridor_widths = range(min_corridor_width, max_corridor_width, 2)
 	var _corridor_width: int = _allowed_corridor_widths[randi() % _allowed_corridor_widths.size()]
@@ -235,14 +206,22 @@ func _add_corridor(start, end, constant, axis):
 	if(axis == Vector2.AXIS_Y):
 		_generated_level["corridors"].append(Rect2(_startPoint, _startPoint, _corridor_width, _endPoint + _corridor_width))
 
+func _add_room(room):
+	_generated_level["rooms"].append(room)
+	for x in range(room.position.x, room.end.x):
+		for y in range(room.position.y, room.end.y):
+			_generated_level["floor"][Vector2(x, y)] = TILE_SET["FLOOR"]
+	
 func _add_lighting(room) -> void:
 	var room_center = room.get_center() * tile_size
 	var _new_light = room_light_scene.instantiate()
 	
 	_new_light.position = room_center
-	add_child(_new_light)
+	_generated_level["lights"][_new_light.position] = _new_light
+	
+	#add_child(_new_light)
 
-func add_exit():
+func _add_exit():
 	var random_room = get_random_room()
 	if ! random_room:
 		print("Sir, there is no room for an exit...?")
@@ -251,20 +230,17 @@ func add_exit():
 	# for now naively try again
 	if random_room.position == _generated_level["entry_room"].position:
 		print("cannot have exit in same room as where we started, whats the fun in that? lets try again")
-		add_exit()
+		_add_exit()
 	
 	_generated_level["exit_room"] = random_room
-	_set_tile_at(random_room.get_center(), TILE_SET.EXIT)
-		
 
-func add_entry():
+func _add_entry():
 	var random_room = get_random_room()
 	if ! random_room:
 		print("Sir, there is no room for to start our adventure...?")
 		return
-	
+		
 	_generated_level["entry_room"] = random_room
-	_set_tile_at(random_room.get_center(), TILE_SET.ENTRY)
 	
 func _room_intersects(new_room: Rect2) -> bool:
 	if (_generated_level["rooms"].size() == 0): return false
@@ -274,13 +250,6 @@ func _room_intersects(new_room: Rect2) -> bool:
 			exists = true
 			break
 	return exists
-	
-func _set_tile_at(vector: Vector2, tile_atlas_coor: Vector2) -> void:
-	tile_map_layer.set_cell(vector, 0, tile_atlas_coor, 0)
-
-# move to global?
-func get_current_seed() -> int:
-	return rng.get_seed()
 	
 func get_level_data() -> Dictionary:
 	return _generated_level

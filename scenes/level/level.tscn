@@ -1,9 +1,10 @@
-[gd_scene load_steps=25 format=4 uid="uid://dhbfkic6pbxbe"]
+[gd_scene load_steps=26 format=4 uid="uid://dhbfkic6pbxbe"]
 
 [ext_resource type="Script" path="res://scenes/level/level.gd" id="1_t46ye"]
 [ext_resource type="Texture2D" uid="uid://k7uehj0d00cv" path="res://tileset.png" id="2_xus4e"]
 [ext_resource type="Script" path="res://scenes/level/map_generator.gd" id="3_xrfwv"]
 [ext_resource type="Script" path="res://scenes/level/enemy_controller.gd" id="4_dbbvn"]
+[ext_resource type="Script" path="res://scenes/level/map_drawer.gd" id="5_rud30"]
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_dgjqn"]
 polygon = PackedVector2Array(-32, -32, -32, 32, -3, 32, -3, 2.5, -3, -4.5, 28, -4, 28.5, -32)
@@ -224,3 +225,8 @@ tile_set = SubResource("TileSet_b2bn6")
 
 [node name="EnemyController" type="Node2D" parent="."]
 script = ExtResource("4_dbbvn")
+
+[node name="MapDrawer" type="Node2D" parent="."]
+script = ExtResource("5_rud30")
+
+[node name="LevelTransitioner" type="Node2D" parent="."]
