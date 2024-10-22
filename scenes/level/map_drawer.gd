@@ -27,6 +27,7 @@ const TILE_SET = {
 	"EXIT": Vector2(3, 1),
 }
 
+var tile_size = Vector2(64, 64)
 var tile_map_layer: TileMapLayer
 var level_data = {}
 
@@ -62,10 +63,14 @@ func _draw_lights():
 		add_child(level_data["lights"][tile_vector])
 
 func _draw_entry():
-	_set_tile_at(level_data["entry_room"].get_center(), TILE_SET.ENTRY)
+	var entry_position = level_data["entry_room"].get_center()
+	Signals.level_entry_updated.emit(Rect2(entry_position * tile_size, tile_size))
+	_set_tile_at(entry_position, TILE_SET.ENTRY)
 
 func _draw_exit():
-	_set_tile_at(level_data["exit_room"].get_center(), TILE_SET.EXIT)
+	var exit_position = level_data["exit_room"].get_center()
+	Signals.level_exit_updated.emit(Rect2(exit_position * tile_size, tile_size))
+	_set_tile_at(exit_position, TILE_SET.EXIT)
 
 func generate_dark_color():
 	return Color(randf_range(0.0, 0.2), randf_range(0.0, 0.2), randf_range(0.0, 0.2))

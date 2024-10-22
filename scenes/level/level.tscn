@@ -1,10 +1,11 @@
-[gd_scene load_steps=26 format=4 uid="uid://dhbfkic6pbxbe"]
+[gd_scene load_steps=27 format=4 uid="uid://dhbfkic6pbxbe"]
 
 [ext_resource type="Script" path="res://scenes/level/level.gd" id="1_t46ye"]
 [ext_resource type="Texture2D" uid="uid://k7uehj0d00cv" path="res://tileset.png" id="2_xus4e"]
 [ext_resource type="Script" path="res://scenes/level/map_generator.gd" id="3_xrfwv"]
 [ext_resource type="Script" path="res://scenes/level/enemy_controller.gd" id="4_dbbvn"]
 [ext_resource type="Script" path="res://scenes/level/map_drawer.gd" id="5_rud30"]
+[ext_resource type="Script" path="res://scenes/level/level_transition.gd" id="6_sjbvn"]
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_dgjqn"]
 polygon = PackedVector2Array(-32, -32, -32, 32, -3, 32, -3, 2.5, -3, -4.5, 28, -4, 28.5, -32)
@@ -229,4 +230,16 @@ script = ExtResource("4_dbbvn")
 [node name="MapDrawer" type="Node2D" parent="."]
 script = ExtResource("5_rud30")
 
-[node name="LevelTransitioner" type="Node2D" parent="."]
+[node name="LevelTransition" type="Control" parent="."]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_sjbvn")
+
+[node name="ColorRect" type="ColorRect" parent="LevelTransition"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(0, 0, 0, 1)

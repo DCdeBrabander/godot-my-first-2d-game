@@ -8,6 +8,8 @@ extends CharacterBody2D
 @onready var player_collision_shape = $CollisionShape2D
 
 signal hit
+signal reached_exit
+signal reached_entry
 
 enum PlayerStates {
 	ALIVE,
@@ -21,7 +23,8 @@ enum ActionStates {
 	CROUCHING,
 }
 
-var _current_delta: float
+var render_delta: float
+var physics_delta: float
 var screen_size
 
 # inventory action thingz (maybe abstract later)
@@ -42,18 +45,24 @@ var dash_time_remaining: float = 0.0
 var dash_cooldown_remaining: float = 1.0
 var dash_direction := Vector2.ZERO
 
+# other
+var _level_entry_rectangle: Rect2 
+var _level_exit_rectangle: Rect2
+
+# TODO: test again, now _physics_process is added
 # Workaround for float inaccuracy (is_approx_zero() isnt reliable?)
 const COOLDOWN_THRESHOLD = 0.01
 const DELTA_EPSILON = 0.01
 
 func _ready() -> void:
+	_connect_signals()
 	screen_size = get_viewport_rect().size
 	current_speed = default_speed
 	hide()
-	
+
 func start(_position: Vector2):
 	self.position = _position
-	alive()
+	is_alive()
 
 func die():
 	current_player_state = PlayerStates.DEAD
@@ -61,21 +70,28 @@ func die():
 	get_tree().call_group("bullets", "queue_free")
 	hide()
 
-func alive():
+func is_alive():
 	current_player_state = PlayerStates.ALIVE
 	player_collision_shape.disabled = false
 	show()
 
-func _process(delta: float) -> void:
+func _process(_render_delta: float) -> void:
 	if (current_player_state == PlayerStates.DEAD):
 		return
 	
-	_current_delta = delta
-
+	render_delta = _render_delta
+	rotate_field_of_view()
+	
+func _physics_process(_physics_delta: float) -> void:
+	physics_delta = _physics_delta
 	update_cooldowns()
 	handle_actions_from_input()
-	rotate_field_of_view()
 	move_player()
+	
+	if _level_entry_rectangle.has_point(position):
+		Signals.player_reached_level_entry.emit()
+	elif _level_exit_rectangle.has_point(position):
+		Signals.player_reached_level_exit.emit()
 
 func handle_actions_from_input():
 	if not is_dashing():
@@ -88,7 +104,7 @@ func handle_actions_from_input():
 	if Input.is_action_pressed("fire"): shoot()
 
 func update_cooldowns():
-	if dash_cooldown_remaining > COOLDOWN_THRESHOLD: dash_cooldown_remaining -= _current_delta
+	if dash_cooldown_remaining > COOLDOWN_THRESHOLD: dash_cooldown_remaining -= physics_delta
 	else: set_action_state(ActionStates.NORMAL_WALKING)
 
 func move_player():
@@ -96,7 +112,7 @@ func move_player():
 	var player_velocity: Vector2 = Vector2.ZERO
 	current_speed = default_speed
 	
-	match(current_action_state):
+	match (current_action_state):
 		ActionStates.DASHING:
 			if (is_dashing()): current_speed = dash_speed
 		ActionStates.CROUCHING: current_speed = 0
@@ -109,11 +125,13 @@ func move_player():
 	if current_speed > 0:
 		player_animation.play()
 	
-	player_velocity = current_player_direction.normalized() * current_speed * _current_delta
+	player_velocity = current_player_direction.normalized() * current_speed * physics_delta
 	move_and_collide(player_velocity)
 	set_animation(get_mouse_direction())
-	Global.update_player_position(self.position)
 
+func move_player_to(_position):
+	position = _position
+	
 func start_dash():
 	if is_dashing():
 		return
@@ -133,7 +151,7 @@ func is_dashing() -> bool:
 	if (dash_time_remaining <= DELTA_EPSILON):
 		return false
 		
-	dash_time_remaining -= _current_delta
+	dash_time_remaining -= physics_delta
 	return true
 
 func set_action_state(action_state: ActionStates):
@@ -186,21 +204,33 @@ func get_move_direction():
 func get_mouse_direction() -> Vector2:
 	return get_global_mouse_position() - position
 
-func _on_body_entered(body: Node2D) -> void:
-	if (body.is_in_group("mobs")):
-		hit.emit()
-		die()
-
-func start_gun_cooldown():
-	can_shoot = false
-	$GunCooldown.start()
-	
-func _on_gun_cooldown_timeout() -> void:
-	can_shoot = true
-
 func get_minimap_indicator_style() -> Dictionary:
 	return {
 		"size": Vector2(10, 10),
 		"color": Color(1, 0, 0),
 		"animate": "pulse"
 	}
+	
+func start_gun_cooldown():
+	can_shoot = false
+	$GunCooldown.start()
+	
+# Private Event Listeners
+func _on_body_entered(body: Node2D) -> void:
+	if (body.is_in_group("mobs")):
+		hit.emit()
+		die()
+	
+func _on_gun_cooldown_timeout() -> void:
+	can_shoot = true
+
+func _update_level_entry(_entry: Rect2): 
+	_level_entry_rectangle = _entry
+	
+func _update_level_exit(_exit: Rect2):
+	_level_exit_rectangle = _exit
+
+func _connect_signals():
+	Signals.level_entry_updated.connect(_update_level_entry)
+	Signals.level_exit_updated.connect(_update_level_exit)
+	Signals.move_player_to.connect(move_player_to)

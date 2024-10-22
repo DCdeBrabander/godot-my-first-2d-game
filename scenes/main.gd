@@ -16,7 +16,7 @@ func _ready():
 	viewport_size = viewport.get_visible_rect()
 	
 	Level.initialize()
-	Map.set_level_data(Level.get_current_level())
+	Map.set_level_data(Level.get_current_level_data())
 	Map.draw_map()
 	Map.add_marker_for_node(Player.get_instance_id())
 	
