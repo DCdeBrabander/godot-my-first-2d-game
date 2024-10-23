@@ -40,7 +40,8 @@ func set_level_data(level: Dictionary):
 	return self
 
 func draw_level():
-	tile_map_layer.clear()
+	clear_level()
+	
 	set_background(generate_dark_color())
 	
 	_draw_floor()
@@ -77,6 +78,17 @@ func generate_dark_color():
 	
 func set_background(color: Color):
 	RenderingServer.set_default_clear_color(color)
+
+func clear_level():
+	if not "bounding_box" in level_data:
+		return
+	
+	#for x in range(level_data["bounding_box"].position.x, level_data["bounding_box"].size.x):
+		#for y in range(level_data["bounding_box"].position.y, level_data["bounding_box"].size.y):
+			#tile_map_layer.set_cell(Vector2(x, y), -1, Vector2(-1, -1), -1)
+
+	tile_map_layer.clear()
+	tile_map_layer.update_internals()
 	
 func _set_tile_at(vector: Vector2, tile_atlas_coor: Vector2) -> void:
 	tile_map_layer.set_cell(vector, 0, tile_atlas_coor, 0)

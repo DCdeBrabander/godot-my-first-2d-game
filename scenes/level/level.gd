@@ -57,8 +57,12 @@ func get_level_data_by_seed(seed):
 	return levels[seed]
 	
 func draw_level():
-	var level = get_current_level_data()
-	map_drawer.set_level_data(level).draw_level()
+	var level_data = get_current_level_data()
+	map_drawer.clear_level()
+	map_drawer.set_level_data(level_data).draw_level()
+	
+	Signals.level_updated.emit(level_data)
+	
 	for i in current_settings["amount_enemies"]:
 		enemy_controller.spawn_on_point(map_generator.get_random_room_spawn())
 
@@ -66,33 +70,33 @@ func generate_new_level():
 	var level_seed = randomize_seed()
 	level_seeds.append(level_seed)
 	generate_level_with_seed(level_seed)
+	return level_seed
 
 # Ok, lets generate a new level and go there!
 # TODO Now we just kill all mobs, maybe we should remember them and clear them more cleanly
 # TODO Update minimap (signal)
 # TODO Debug why new maps are not completely generated correctly? 
 func go_to_next_level():
-	_disable_level_exit_listener()
-	transition_scene.fade_out(1.0)
-	transition_scene.connect("transition_finished", _load_next_level)
+	Signals.loading_started.emit()
 	
-func _load_next_level():
+	_disable_level_exit_listener()
 	enemy_controller.kill_all()
 	current_level += 1
 	
 	generate_new_level()
 	draw_level()
-	
 	Signals.move_player_to.emit(get_entry_position())
 	_enable_level_exit_listener()
-	transition_scene.fade_in(1.0)
+	
+	Signals.loading_done.emit()
 	
 func get_entry_position():
 	var level = get_current_level_data()
 	return level["entry_room"].get_center() * map_generator.get_tile_size()
 	
 func get_exit_position():
-	pass
+	var level = get_current_level_data()
+	return level["exit_room"].get_center() * map_generator.get_tile_size()
 
 func get_current_level() -> int:
 	return current_level

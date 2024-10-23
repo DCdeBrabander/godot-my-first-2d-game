@@ -2,31 +2,24 @@ extends Control
 
 signal transition_finished
 
-var tween: Tween
-
-func _ready():
-	# Start with the ColorRect fully transparent
-	$ColorRect.modulate.a = 0
-	tween = Tween.new()
-	#add_child(tween)
-	
 func fade_out(duration: float):
+	print("start fade out")
+	
+	var tween = create_tween()
+
 	# Animate fading to black
 	$ColorRect.modulate.a = 0
 	$ColorRect.show()  # Ensure the ColorRect is visible
 
-	
+	tween.tween_property($ColorRect, "modulate:a", 1.0, duration)
+	#tween.connect("tween_completed", _on_tween_completed)
+	#tween.finished.connect(callback)
 
-	tween.tween_property($ColorRect, "modulate:a", 1, duration)
-	tween.connect("tween_completed", _on_tween_completed)
-
-func fade_in(duration: float):
-	# Animate fading in from black
-	var tween = Tween.new()
-	add_child(tween)
-
-	tween.tween_property($ColorRect, "modulate:a", 0, duration)
-	tween.connect("tween_completed", _on_tween_completed)
+func fade_in(duration: float, callback: Callable):
+	var tween = create_tween()
+	tween.tween_property($ColorRect, "modulate:a", 0.0, duration)
+	#tween.connect("tween_completed", _on_tween_completed)
+	tween.finished.connect(callback)
 
 func _on_tween_completed(tween: Tween, key: String):
 	if key == "fade_out":

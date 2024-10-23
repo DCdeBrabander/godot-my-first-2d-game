@@ -71,7 +71,6 @@ func generate_level(_rng) -> Dictionary:
 	_add_entry()
 	_add_exit()
 	
-	Signals.level_generated.emit(_generated_level)
 	return _generated_level
 
 func _generate_walls():
